@@ -378,7 +378,8 @@ let unsubLines = null, unsubEntries = null, unsubSharedLines = null, unsubShared
 let lines = [], entries = {}, sharedLines = [], sharedEntries = {};
 let activeLineId = null, activeEntryId = null, isSharedLine = false;
 let currentView = 'entries', isNew = false, _eTags = [];
-let _nlIcon = '💡', _nlColor = '#C8A96E', _nlShared = false;
+let _nlIcon = '💡', _nlColor = '#C8A96E';
+window._nlShared = false;
 let myProfile = null, friends = {}, profileEntryCount = 0;
 
 const ICONS  = ['💡','✈','🏦','☕','🏭','🌐','🚀','📦','🏗','💎','🎯','📊','🔑','🛢','📋','🧭','🏠','⚡'];
@@ -501,7 +502,7 @@ function renderSidebar() {
   document.getElementById('stat-e').textContent=te; document.getElementById('stat-d').textContent=td;
 }
 
-function renderList(){
+window.renderList = function(){
   const line=activeLine(); const scroll=document.getElementById('entries-scroll'); const lhTitle=document.getElementById('lh-title');
   if(!line){scroll.innerHTML='';lhTitle.textContent='—';return;}
   lhTitle.innerHTML = `<span style="color:${line.color}">${line.icon}</span> ${esc(line.name)}${isSharedLine?' <span style="font-size:8px;color:var(--gold);font-family:var(--mono)">⇄</span>':''}`;
@@ -564,14 +565,14 @@ window.confirmDelLine = async function(){
 };
 window.openNewEntry = function(){if(isSharedLine&&!canWrite()){alert('У вас нет прав на запись в этой линии');return;}enterEditMode(true);};
 
-window.openNewLineModal = function(){_nlIcon=ICONS[0];_nlColor=COLORS[0];_nlShared=false;renderNLModal();};
-function renderNLModal(){
+window.openNewLineModal = function(){_nlIcon=ICONS[0];_nlColor=COLORS[0];window._nlShared=false;renderNLModal();};
+window.renderNLModal = function(){
   const v=document.getElementById('nl-name')?.value||'';
   openModal(`<div class="m-title">Новая линия</div>
     <label class="m-lbl">ТИП ЛИНИИ</label>
     <div style="display:flex;gap:8px;margin-bottom:14px">
-      <button class="btn-o" style="flex:1;text-align:center;${!_nlShared?'background:var(--gold);color:#0F0F0F;border-color:var(--gold)':''}" onclick="_nlShared=false;renderNLModal()">🙋 Личная</button>
-      <button class="btn-o" style="flex:1;text-align:center;${_nlShared?'background:var(--gold);color:#0F0F0F;border-color:var(--gold)':''}" onclick="_nlShared=true;renderNLModal()">🌐 Совместная</button>
+      <button class="btn-o" style="flex:1;text-align:center;${!window._nlShared?'background:var(--gold);color:#0F0F0F;border-color:var(--gold)':''}" onclick="window._nlShared=false;window.renderNLModal()">🙋 Личная</button>
+      <button class="btn-o" style="flex:1;text-align:center;${window._nlShared?'background:var(--gold);color:#0F0F0F;border-color:var(--gold)':''}" onclick="window._nlShared=true;window.renderNLModal()">🌐 Совместная</button>
     </div>
     <label class="m-lbl">НАЗВАНИЕ</label><input class="m-in" id="nl-name" placeholder="Например: KUE" value="${esc(v)}" autofocus>
     <label class="m-lbl">ИКОНКА</label><div class="icon-grid">${ICONS.map(i=>`<button class="ico-b ${i===_nlIcon?'sel':''}" onclick="pickIcon('${i}')">${i}</button>`).join('')}</div>
@@ -583,7 +584,7 @@ window.pickIcon = i=>{_nlIcon=i;renderNLModal();};
 window.pickClr  = c=>{_nlColor=c;renderNLModal();};
 window.submitNewLine = async function(){
   const name=(document.getElementById('nl-name').value||'').trim(); if(!name)return; const id=genId();
-  if(_nlShared){
+  if(window._nlShared){
     const membersObj = {}; membersObj[uid()] = {role:'admin'};
     await saveLine(id,{name,icon:_nlIcon,color:_nlColor,order:sharedLines.length,ownerId:uid(),members:membersObj,createdAt:serverTimestamp()},true);
     closeModal(); setTimeout(()=>openManageMembersModal(id),400);
