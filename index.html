@@ -21,7 +21,8 @@
   --dim:    #4A4A4A;
   --mono:   'Courier New', monospace;
   --serif:  Georgia, 'Times New Roman', serif;
-  --sans:   -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --sans:   -apple-system, BlinkMacSystemFont
+  , 'Segoe UI', sans-serif;
 }
 
 html, body {
@@ -271,7 +272,40 @@ html, body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+/* CALL PANEL */
+#call-panel { display: none; position: fixed; bottom: 0; left: 200px; right: 0; z-index: 400; background: var(--bg2); border-top: 1px solid var(--gold); max-height: 280px; flex-direction: column; animation: callUp 0.25s ease; }
+@keyframes callUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+#call-panel.open { display: flex; }
+#call-topbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.call-title { font-family: var(--mono); font-size: 10px; letter-spacing: 1px; color: var(--gold); display: flex; align-items: center; gap: 8px; }
+.call-live-dot { width: 8px; height: 8px; border-radius: 50%; background: #e44; animation: blink 1s infinite; }
+.call-duration { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+.call-participants { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; flex: 1; padding: 0 16px; }
+.call-participant { display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; }
+.call-p-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 16px; font-weight: bold; color: #0F0F0F; transition: box-shadow 0.2s; }
+.call-p-avatar.speaking { box-shadow: 0 0 0 3px #3a3; }
+.call-p-name { font-size: 9px; color: #AAA; font-family: var(--mono); max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.call-p-mic { font-size: 10px; opacity: 0.6; }
+.call-p-mic.muted { opacity: 0.25; }
+#call-videos { display: flex; gap: 8px; padding: 0 18px 8px; overflow-x: auto; flex-wrap: wrap; }
+.call-video-tile { width: 160px; height: 120px; background: #000; border-radius: 4px; overflow: hidden; position: relative; flex-shrink: 0; }
+.call-video-tile video { width: 100%; height: 100%; object-fit: cover; }
+.call-video-label { position: absolute; bottom: 4px; left: 6px; font-size: 9px; color: #fff; background: rgba(0,0,0,0.5); padding: 1px 5px; border-radius: 2px; font-family: var(--mono); }
+.call-actions { display: flex; gap: 10px; padding: 8px 18px 12px; border-top: 1px solid var(--border); justify-content: center; }
+.call-btn { width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.call-btn-mic { background: #2a2a2a; color: #AAA; }
+.call-btn-mic:hover { background: #3a3a3a; }
+.call-btn-mic.off { background: #4a2222; color: #d47373; }
+.call-btn-mic.off:hover { background: #5a2a2a; }
+.call-btn-cam { background: #2a2a2a; color: #AAA; }
+.call-btn-cam:hover { background: #3a3a3a; }
+.call-btn-cam.off { background: #4a2222; color: #d47373; }
+.call-btn-cam.off:hover { background: #5a2a2a; }
+.call-btn-end { background: #c44; color: #fff; }
+.call-btn-end:hover { background: #d55; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
 </head>
 <body>
 
@@ -353,6 +387,21 @@ html, body {
 </div>
 
 <div id="overlay" onclick="handleBgClick(event)"><div id="mbox"></div></div>
+
+<div id="call-panel">
+  <div id="call-topbar">
+    <div class="call-title"><span class="call-live-dot"></span> ЗВОНОК <span id="call-room-name"></span></div>
+    <span class="call-duration" id="call-duration">00:00</span>
+    <div class="call-participants" id="call-participants"></div>
+    <button class="btn-g" style="font-size:10px;font-family:var(--mono)" onclick="toggleCallMinimize()">_</button>
+  </div>
+  <div id="call-videos"></div>
+  <div class="call-actions">
+    <button class="call-btn call-btn-mic" id="call-btn-mic" onclick="toggleMic()" title="Микрофон">🎤</button>
+    <button class="call-btn call-btn-cam" id="call-btn-cam" onclick="toggleCam()" title="Камера">📷</button>
+    <button class="call-btn call-btn-end" onclick="endCall()" title="Завершить">✕</button>
+  </div>
+</div>
 
 <script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
@@ -535,7 +584,7 @@ function enterEditMode(fresh=false){const entry=fresh?null:activeEntry();isNew=!
 function renderEditTags(){const area=document.getElementById('ee-tag-area');const inp=document.getElementById('ee-tag-input');area.innerHTML='';_eTags.forEach(t=>{const s=document.createElement('span');s.className='ee-tag';s.innerHTML=`${esc(t)}<span class="ee-tag-x" onclick="removeTag('${esc(t)}')">✕</span>`;area.appendChild(s);});area.appendChild(inp);}
 function updateWC(){const w=wc(document.getElementById('ee-body').value);document.getElementById('ee-wc').textContent=w+' '+(w===1?'слово':w<5?'слова':'слов');}
 
-window.selectLine = function(id,shared){isSharedLine=!!shared;activeLineId=id;activeEntryId=null;currentView='entries';document.getElementById('search-box').value='';renderSidebar();renderList();showPanel('empty');};
+window.selectLine = function(id,shared){isSharedLine=!!shared;activeLineId=id;activeEntryId=null;currentView='entries';document.getElementById('search-box').value='';renderSidebar();renderList();showPanel('empty');updateCallButton();};
 window.setView = function(v){currentView=v;renderList();};
 window.selectEntry = function(id){activeEntryId=id;renderList();refreshViewPanel();};
 window.cancelEdit = function(){if(isNew){showPanel('empty');activeEntryId=null;renderList();}else refreshViewPanel();};
@@ -768,7 +817,172 @@ window.closeModal = ()=>{document.getElementById('overlay').classList.remove('op
 window.handleBgClick = e=>{if(e.target===document.getElementById('overlay'))closeModal();};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeProfile();}if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();if(document.getElementById('editor-edit').style.display!=='none')window.saveEntry();}if((e.ctrlKey||e.metaKey)&&e.key==='n'){e.preventDefault();window.openNewEntry();}});
 
-const listHead=document.getElementById('list-head'); const extraRow=document.createElement('div'); extraRow.style='display:flex;gap:5px;justify-content:space-between;align-items:center;'; extraRow.innerHTML=`<button class="btn-p" style="font-size:10px;padding:5px 12px" onclick="openNewEntry()">+ запись</button><button class="btn-del" style="font-size:10px" onclick="confirmDelLine()">удалить линию</button>`; listHead.appendChild(extraRow);
+const TOKEN_SERVER = 'https://based-hundred-protocols-facing.trycloudflare.com';
+const LIVEKIT_URL  = 'wss://together-contamination-geneva-wheat.trycloudflare.com';
+
+let callRoom = null, callConnected = false, callMicMuted = false, callCamOff = true;
+let callMicTrack = null, callCamTrack = null;
+let callParticipants = {};
+let callDurationTimer = null, callStartedAt = 0;
+
+function updateCallButton() {
+  const btn = document.getElementById('btn-call');
+  if (!btn) return;
+  if (callConnected) { btn.style.display = 'none'; }
+  else if (isSharedLine && activeLineId) { btn.style.display = ''; }
+  else { btn.style.display = 'none'; }
+}
+
+window.startCall = async function() {
+  if (!isSharedLine || !activeLineId || !myProfile?.handle) return;
+  const line = activeLine();
+  if (!line) return;
+  try {
+    syncDot('syncing');
+    const resp = await fetch(`${TOKEN_SERVER}/token?room=${encodeURIComponent(activeLineId)}&identity=${encodeURIComponent(myProfile.handle)}`);
+    if (!resp.ok) throw new Error(`Token server error: ${resp.status}`);
+    const data = await resp.json();
+    if (!data.token) throw new Error('No token in response');
+    callRoom = new LivekitClient.Room();
+    setupRoomEvents(callRoom);
+    await callRoom.connect(LIVEKIT_URL, data.token);
+    callConnected = true;
+    callStartedAt = Date.now();
+    document.getElementById('call-panel').classList.add('open');
+    document.getElementById('call-room-name').textContent = line.name || '';
+    updateCallButton();
+    startCallDurationTimer();
+    try {
+      callMicTrack = await LivekitClient.createLocalAudioTrack();
+      await callRoom.localParticipant.publishTrack(callMicTrack);
+      callMicMuted = false;
+      updateMicButton();
+    } catch (e) { console.warn('Mic not available', e); }
+    syncDot('ok');
+  } catch (err) {
+    console.error('Call start error:', err);
+    alert('Не удалось начать звонок: ' + err.message);
+    callConnected = false; callRoom = null;
+    syncDot('error');
+  }
+};
+
+function setupRoomEvents(room) {
+  room.on(LivekitClient.RoomEvent.Disconnected, () => {
+    callConnected = false; callRoom = null; callParticipants = {};
+    document.getElementById('call-panel').classList.remove('open');
+    document.getElementById('call-videos').innerHTML = '';
+    document.getElementById('call-participants').innerHTML = '';
+    stopCallDurationTimer(); updateCallButton();
+    if (callMicTrack) { callMicTrack.stop(); callMicTrack = null; }
+    if (callCamTrack) { callCamTrack.stop(); callCamTrack = null; }
+    document.getElementById('call-btn-mic').className = 'call-btn call-btn-mic';
+    document.getElementById('call-btn-cam').className = 'call-btn call-btn-cam';
+  });
+  room.on(LivekitClient.RoomEvent.ParticipantConnected, (p) => { addRemoteParticipant(p); });
+  room.on(LivekitClient.RoomEvent.ParticipantDisconnected, (p) => { removeRemoteParticipant(p); });
+  room.remoteParticipants.forEach((p) => addRemoteParticipant(p));
+  addLocalParticipant(room.localParticipant);
+}
+
+function addLocalParticipant(lp) {
+  callParticipants[lp.sid] = { identity: lp.identity, handle: lp.identity, isSpeaking: false, isLocal: true, sid: lp.sid };
+  roomLocalOn(lp);
+}
+function roomLocalOn(lp) {
+  lp.on(LivekitClient.ParticipantEvent.IsSpeakingChanged, (speaking) => { if (callParticipants[lp.sid]) callParticipants[lp.sid].isSpeaking = speaking; renderCallParticipants(); });
+  lp.on(LivekitClient.ParticipantEvent.TrackPublished, (pub) => { if (pub.track) handleTrackSub(lp, pub); });
+  lp.on(LivekitClient.ParticipantEvent.TrackUnpublished, (pub) => { if (pub.track) handleTrackUnsub(lp, pub); });
+  lp.trackPublications.forEach(pub => { if (pub.track) handleTrackSub(lp, pub); });
+}
+function addRemoteParticipant(p) {
+  callParticipants[p.sid] = { identity: p.identity, handle: p.identity, isSpeaking: p.isSpeaking || false, isLocal: false, sid: p.sid };
+  p.on(LivekitClient.ParticipantEvent.IsSpeakingChanged, (speaking) => { if (callParticipants[p.sid]) callParticipants[p.sid].isSpeaking = speaking; renderCallParticipants(); });
+  p.on(LivekitClient.ParticipantEvent.TrackSubscribed, (track, pub) => { handleTrackSub(p, pub); });
+  p.on(LivekitClient.ParticipantEvent.TrackUnsubscribed, (track, pub) => { handleTrackUnsub(p, pub); });
+  p.trackPublications.forEach(pub => { if (pub.track) handleTrackSub(p, pub); });
+  renderCallParticipants();
+}
+function removeRemoteParticipant(p) { delete callParticipants[p.sid]; renderCallParticipants(); renderCallVideos(); }
+function handleTrackSub(participant, publication) {
+  const track = publication.track; if (!track) return;
+  if (track.kind === 'audio') { if (callParticipants[participant.sid]) callParticipants[participant.sid].audioTrack = track; }
+  else if (track.kind === 'video') { if (callParticipants[participant.sid]) callParticipants[participant.sid].videoTrack = track; renderCallVideos(); }
+  renderCallParticipants();
+}
+function handleTrackUnsub(participant, publication) {
+  const track = publication.track; if (!track) return;
+  if (track.kind === 'video') { if (callParticipants[participant.sid]) callParticipants[participant.sid].videoTrack = null; renderCallVideos(); }
+  else if (track.kind === 'audio') { if (callParticipants[participant.sid]) callParticipants[participant.sid].audioTrack = null; }
+  renderCallParticipants();
+}
+
+function renderCallParticipants() {
+  const container = document.getElementById('call-participants');
+  const parts = Object.values(callParticipants);
+  container.innerHTML = parts.map(p => {
+    const [init, clr] = getAvatar(p.handle || p.identity);
+    const speakingClass = p.isSpeaking ? ' speaking' : '';
+    const hasAudio = p.audioTrack && !(p.isLocal && callMicMuted);
+    const micIcon = hasAudio ? '🎤' : '🔇';
+    const micClass = hasAudio ? '' : ' muted';
+    return `<div class="call-participant"><div class="call-p-avatar${speakingClass}" style="background:${clr}">${esc(init)}</div><span class="call-p-name">${esc((p.handle||p.identity).slice(0,8))}</span><span class="call-p-mic${micClass}">${micIcon}</span></div>`;
+  }).join('');
+}
+
+function renderCallVideos() {
+  const container = document.getElementById('call-videos');
+  const parts = Object.values(callParticipants).filter(p => p.videoTrack);
+  container.innerHTML = parts.map(p => `<div class="call-video-tile" id="vt-${p.sid}"><div class="call-video-label">${esc((p.handle||p.identity).slice(0,10))}</div></div>`).join('');
+  parts.forEach(p => {
+    if (p.videoTrack) {
+      const tile = document.getElementById('vt-' + p.sid);
+      if (tile && !tile.querySelector('video')) {
+        const el = p.videoTrack.attach();
+        el.style.width = '100%'; el.style.height = '100%'; el.style.objectFit = 'cover';
+        tile.appendChild(el);
+      }
+    }
+  });
+}
+
+window.toggleMic = function() {
+  if (!callRoom) return;
+  callMicMuted = !callMicMuted;
+  if (callMicTrack) { try { callMicTrack.mediaStreamTrack.enabled = !callMicMuted; } catch(e) {} }
+  updateMicButton(); renderCallParticipants();
+};
+function updateMicButton() { const btn = document.getElementById('call-btn-mic'); btn.className = 'call-btn call-btn-mic' + (callMicMuted ? ' off' : ''); btn.textContent = callMicMuted ? '🔇' : '🎤'; }
+window.toggleCam = function() {
+  if (!callRoom) return;
+  callCamOff = !callCamOff;
+  const btn = document.getElementById('call-btn-cam');
+  if (callCamOff) {
+    if (callCamTrack) { callRoom.localParticipant.unpublishTrack(callCamTrack); callCamTrack.stop(); callCamTrack = null; }
+    btn.className = 'call-btn call-btn-cam off'; btn.textContent = '📷';
+  } else {
+    LivekitClient.createLocalVideoTrack().then(track => { callCamTrack = track; callRoom.localParticipant.publishTrack(track); btn.className = 'call-btn call-btn-cam'; btn.textContent = '📹'; }).catch(() => { callCamOff = true; btn.className = 'call-btn call-btn-cam off'; btn.textContent = '📷'; });
+  }
+};
+window.endCall = function() { if (callRoom) callRoom.disconnect(); };
+window.toggleCallMinimize = function() {
+  const panel = document.getElementById('call-panel');
+  const videos = document.getElementById('call-videos');
+  const actions = panel.querySelector('.call-actions');
+  if (videos.style.display === 'none') { videos.style.display = ''; actions.style.display = ''; panel.style.maxHeight = '280px'; }
+  else { videos.style.display = 'none'; actions.style.display = 'none'; panel.style.maxHeight = '60px'; }
+};
+function startCallDurationTimer() {
+  stopCallDurationTimer();
+  callDurationTimer = setInterval(() => {
+    if (!callStartedAt) return;
+    const sec = Math.floor((Date.now() - callStartedAt) / 1000);
+    document.getElementById('call-duration').textContent = Math.floor(sec/60).toString().padStart(2,'0') + ':' + (sec%60).toString().padStart(2,'0');
+  }, 1000);
+}
+function stopCallDurationTimer() { if (callDurationTimer) { clearInterval(callDurationTimer); callDurationTimer = null; } document.getElementById('call-duration').textContent = '00:00'; }
+
+const listHead=document.getElementById('list-head'); const extraRow=document.createElement('div'); extraRow.style='display:flex;gap:5px;justify-content:space-between;align-items:center;'; extraRow.innerHTML=`<button class="btn-p" style="font-size:10px;padding:5px 12px" onclick="openNewEntry()">+ запись</button><button class="btn-o" style="font-size:10px;padding:4px 10px;${!isSharedLine?'display:none':''}" id="btn-call" onclick="startCall()">📞 Позвонить</button><button class="btn-del" style="font-size:10px" onclick="confirmDelLine()">удалить линию</button>`; listHead.appendChild(extraRow);
 
 window.toggleAuthMode = function(){authMode=authMode==='login'?'register':'login';document.getElementById('auth-submit').textContent=authMode==='login'?'Войти':'Зарегистрироваться';document.getElementById('auth-toggle').innerHTML=authMode==='login'?'Нет аккаунта? <a id="auth-toggle-link" onclick="toggleAuthMode()">Зарегистрироваться</a>':'Уже есть аккаунт? <a id="auth-toggle-link" onclick="toggleAuthMode()">Войти</a>';document.getElementById('auth-error').style.display='none';};
 window.handleAuthSubmit = async function(){
@@ -826,6 +1040,7 @@ onAuthStateChanged(auth, async user => {
       startFirestoreListeners(user.uid);
     }
   } else {
+    if (callRoom) callRoom.disconnect();
     currentUser=null; stopFirestoreListeners();
     document.getElementById('sb-username').textContent='БЛОКНОТ';
     document.getElementById('handle-screen').style.display='none';
