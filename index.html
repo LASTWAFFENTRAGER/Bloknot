@@ -260,11 +260,11 @@ html, body {
 .role-reader  { background:#7BA7E022; color:#7BA7E0; }
 
 /* MEMBER LIST */
-.member-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); }
-.member-row .mem-name { flex:1; font-size:12px; color:var(--text); }
-.member-row .mem-role { margin-right: 6px; }
-.member-row select { background:var(--bg3); border:1px solid var(--border2); border-radius:3px; color:var(--text); padding:2px 4px; font-family:var(--mono); font-size:9px; outline:none; }
-.member-row .mem-remove { color:var(--dim); cursor:pointer; font-size:10px; margin-left:6px; }
+.member-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+.member-row .mem-name { flex:1; font-size:13px; color:var(--text); }
+.member-row .mem-role { margin-right: 8px; }
+.member-row select { background:var(--bg3); border:1px solid var(--border2); border-radius:4px; color:var(--text); padding:5px 8px; font-family:var(--mono); font-size:11px; outline:none; cursor:pointer; }
+.member-row .mem-remove { color:var(--dim); cursor:pointer; font-size:14px; padding:4px 6px; margin-left:4px; transition:color 0.12s; }
 .member-row .mem-remove:hover { color:#c44; }
 
 ::-webkit-scrollbar { width: 3px; }
@@ -380,6 +380,7 @@ let activeLineId = null, activeEntryId = null, isSharedLine = false;
 let currentView = 'entries', isNew = false, _eTags = [];
 let _nlIcon = '💡', _nlColor = '#C8A96E';
 window._nlShared = false;
+let _submitting = false;
 let myProfile = null, friends = {}, profileEntryCount = 0;
 
 const ICONS  = ['💡','✈','🏦','☕','🏭','🌐','🚀','📦','🏗','💎','🎯','📊','🔑','🛢','📋','🧭','🏠','⚡'];
@@ -583,12 +584,17 @@ window.renderNLModal = function(){
 window.pickIcon = i=>{_nlIcon=i;renderNLModal();};
 window.pickClr  = c=>{_nlColor=c;renderNLModal();};
 window.submitNewLine = async function(){
-  const name=(document.getElementById('nl-name').value||'').trim(); if(!name)return; const id=genId();
+  if(_submitting) return; // prevent double-click
+  const name=(document.getElementById('nl-name').value||'').trim(); if(!name)return;
+  _submitting = true;
+  try{
+  const id=genId();
   if(window._nlShared){
     const membersObj = {}; membersObj[uid()] = {role:'admin'};
     await saveLine(id,{name,icon:_nlIcon,color:_nlColor,order:sharedLines.length,ownerId:uid(),members:membersObj,createdAt:serverTimestamp()},true);
     closeModal(); setTimeout(()=>openManageMembersModal(id),400);
   }else{await saveLine(id,{name,icon:_nlIcon,color:_nlColor,order:lines.length},false);closeModal();}
+  }finally{ _submitting = false; }
 };
 
 window.openManageMembersModal = function(lineId){
