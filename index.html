@@ -37,15 +37,14 @@ html, body {
   background: var(--bg2); border-right: 1px solid var(--border);
   display: flex; flex-direction: column;
 }
-.sb-head {
-  padding: 20px 16px 14px;
-  border-bottom: 1px solid var(--border);
-}
+.sb-head { padding: 20px 16px 14px; border-bottom: 1px solid var(--border); }
 .sb-logo {
   font-family: var(--mono); font-size: 11px;
   letter-spacing: 5px; color: var(--gold);
   display: flex; align-items: center; gap: 7px;
 }
+.sb-logo .clickable { cursor:pointer; transition:color 0.12s; }
+.sb-logo .clickable:hover { color: #ddd; }
 .sb-sub { font-family: var(--mono); font-size: 8px; color: var(--dim); letter-spacing: 2px; margin-top: 4px; }
 .sync-dot { width: 5px; height: 5px; border-radius: 50%; background: #3a3; flex-shrink: 0; transition: background 0.3s; }
 .sync-dot.syncing { background: var(--gold); animation: blink 1s infinite; }
@@ -65,6 +64,7 @@ html, body {
 .li-icon  { font-size: 13px; flex-shrink: 0; }
 .li-name  { flex: 1; font-size: 12px; color: #BBB; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .li-count { font-family: var(--mono); font-size: 10px; flex-shrink: 0; }
+.li-role { font-size: 8px; color: var(--dim); margin-left: auto; flex-shrink: 0; }
 
 #btn-new-line {
   margin: 8px 10px 10px; padding: 7px; background: transparent;
@@ -210,11 +210,6 @@ html, body {
 .auth-toggle a { color: var(--gold); cursor: pointer; text-decoration: none; margin-left: 4px; transition: color 0.12s; }
 .auth-toggle a:hover { color: #d4b87a; }
 
-/* SHARED */
-.line-item.shared .li-name::after { content:' ⇄'; color:var(--gold); font-size:9px; }
-.li-badge { font-size:7px; padding:1px 4px; border-radius:3px; margin-left:4px; flex-shrink:0; font-family:var(--mono); }
-.sb-shared-section { margin-top:4px; border-top:1px solid var(--border); }
-
 /* HANDLE SCREEN */
 #handle-screen { position: fixed; inset: 0; background: var(--bg); z-index: 1001; display: none; align-items: center; justify-content: center; padding: 20px; }
 #handle-box { width: 100%; max-width: 380px; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 32px 28px 24px; animation: mopen 0.18s ease; }
@@ -230,6 +225,48 @@ html, body {
 #handle-submit:hover { background:#d4b87a; }
 #handle-submit:disabled { opacity:0.5; cursor:not-allowed; }
 
+/* SHARED */
+.line-item.shared .li-name::after { content:' ⇄'; color:var(--gold); font-size:9px; }
+.sb-shared-section { margin-top:4px; border-top:1px solid var(--border); }
+
+/* AVATAR & PROFILE */
+.avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:14px; font-weight:bold; color:#0F0F0F; flex-shrink:0; }
+.avatar-sm { width:24px; height:24px; font-size:10px; }
+#profile-panel { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1100; display:none; align-items:center; justify-content:center; padding:20px; }
+#profile-panel.open { display:flex; }
+#profile-card { width:100%; max-width:420px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:28px 24px 20px; animation:mopen 0.18s ease; max-height:90vh; overflow-y:auto; }
+.prof-top { display:flex; align-items:center; gap:16px; margin-bottom:20px; }
+.prof-info { flex:1; }
+.prof-name { font-size:17px; color:var(--text); font-weight:bold; }
+.prof-handle { font-size:12px; color:var(--muted); font-family:var(--mono); margin-top:2px; }
+.prof-id { font-size:10px; color:var(--dim); font-family:var(--mono); margin-top:2px; }
+.prof-stat-row { display:flex; gap:20px; margin-bottom:18px; }
+.prof-stat { display:flex; flex-direction:column; }
+.prof-stat .ps-num { font-family:var(--mono); font-size:16px; color:var(--text); }
+.prof-stat .ps-lbl { font-family:var(--mono); font-size:8px; color:var(--dim); letter-spacing:1px; margin-top:1px; }
+.prof-section-title { font-family:var(--mono); font-size:8px; letter-spacing:2px; color:var(--dim); margin-bottom:6px; }
+.friend-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--border); }
+.friend-row .fr-name { flex:1; font-size:12px; color:var(--text); }
+.friend-row .fr-status { font-size:9px; font-family:var(--mono); }
+.fr-btn { font-size:9px; padding:3px 8px; border-radius:3px; cursor:pointer; font-family:var(--mono); border:1px solid var(--border2); background:none; color:var(--muted); transition:all 0.12s; }
+.fr-btn:hover { border-color:#555; color:var(--text); }
+.fr-btn.accept { background:#1a2a15; border-color:#2a4a22; color:#73d473; }
+.fr-btn.accept:hover { background:#243a1f; }
+
+/* ROLE BADGES */
+.role-badge { font-size:8px; padding:2px 5px; border-radius:3px; font-family:var(--mono); letter-spacing:0.5px; }
+.role-admin   { background:#C8A96E22; color:var(--gold); }
+.role-partner { background:#7EB8A422; color:#7EB8A4; }
+.role-reader  { background:#7BA7E022; color:#7BA7E0; }
+
+/* MEMBER LIST */
+.member-row { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); }
+.member-row .mem-name { flex:1; font-size:12px; color:var(--text); }
+.member-row .mem-role { margin-right: 6px; }
+.member-row select { background:var(--bg3); border:1px solid var(--border2); border-radius:3px; color:var(--text); padding:2px 4px; font-family:var(--mono); font-size:9px; outline:none; }
+.member-row .mem-remove { color:var(--dim); cursor:pointer; font-size:10px; margin-left:6px; }
+.member-row .mem-remove:hover { color:#c44; }
+
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
@@ -238,18 +275,11 @@ html, body {
 </head>
 <body>
 
-<div id="loading">
-  <div class="ld-ring"></div>
-  <div class="ld-txt">ПОДКЛЮЧЕНИЕ</div>
-</div>
+<div id="loading"><div class="ld-ring"></div><div class="ld-txt">ПОДКЛЮЧЕНИЕ</div></div>
 
 <div id="handle-screen" style="display:none">
   <div id="handle-box">
-    <div class="handle-logo">
-      <div class="hl-icon">✦</div>
-      <div class="hl-name">БЛОКНОТ</div>
-      <div class="hl-sub">почти готово</div>
-    </div>
+    <div class="handle-logo"><div class="hl-icon">✦</div><div class="hl-name">БЛОКНОТ</div><div class="hl-sub">почти готово</div></div>
     <div id="handle-error"></div>
     <input id="handle-input" type="text" placeholder="Придумайте никнейм" autocomplete="off" maxlength="24">
     <div id="handle-hint">Только буквы, цифры и _. От 3 до 24 знаков. Будет виден всем.</div>
@@ -259,25 +289,23 @@ html, body {
 
 <div id="auth-screen" style="display:none">
   <div id="auth-box">
-    <div class="auth-logo">
-      <div class="al-icon">✦</div>
-      <div class="al-name">БЛОКНОТ</div>
-      <div class="al-sub">стратегический</div>
-    </div>
+    <div class="auth-logo"><div class="al-icon">✦</div><div class="al-name">БЛОКНОТ</div><div class="al-sub">стратегический</div></div>
     <div id="auth-error"></div>
     <input id="auth-email" type="email" placeholder="Email" autocomplete="email">
     <input id="auth-password" type="password" placeholder="Пароль" autocomplete="current-password">
     <button id="auth-submit" onclick="handleAuthSubmit()">Войти</button>
-    <div class="auth-toggle" id="auth-toggle">
-      Нет аккаунта? <a id="auth-toggle-link" onclick="toggleAuthMode()">Зарегистрироваться</a>
-    </div>
+    <div class="auth-toggle" id="auth-toggle">Нет аккаунта? <a id="auth-toggle-link" onclick="toggleAuthMode()">Зарегистрироваться</a></div>
   </div>
+</div>
+
+<div id="profile-panel" onclick="handleProfileBgClick(event)">
+  <div id="profile-card"></div>
 </div>
 
 <div id="app">
   <aside id="sidebar">
     <div class="sb-head">
-      <div class="sb-logo">БЛОКНОТ <span class="sync-dot" id="sync-dot"></span></div>
+      <div class="sb-logo"><span class="clickable" onclick="openProfile()" id="sb-username">БЛОКНОТ</span> <span class="sync-dot" id="sync-dot"></span></div>
       <div class="sb-sub">стратегический</div>
     </div>
     <div class="sb-section">ЛИНИИ</div>
@@ -307,61 +335,31 @@ html, body {
   </div>
 
   <div id="col-editor">
-    <div id="editor-empty" style="display:flex">
-      <div class="ee-icon">✦</div>
-      <div class="ee-text">БЛОКНОТ</div>
-      <div class="ee-hint">Выбери запись или создай новую</div>
-    </div>
+    <div id="editor-empty" style="display:flex"><div class="ee-icon">✦</div><div class="ee-text">БЛОКНОТ</div><div class="ee-hint">Выбери запись или создай новую</div></div>
     <div id="editor-view">
-      <div id="ev-topbar">
-        <div id="ev-title-display"></div>
-        <div class="ev-actions">
-          <button class="btn-o" onclick="openDraftModal()">+ черновик</button>
-          <button class="btn-o" onclick="enterEditMode()">Редактировать</button>
-          <button class="btn-del" onclick="confirmDelEntry()">Удалить</button>
-        </div>
-      </div>
-      <div id="ev-tags-row"></div>
-      <div id="ev-date-row"></div>
+      <div id="ev-topbar"><div id="ev-title-display"></div><div class="ev-actions"><button class="btn-o" onclick="openDraftModal()">+ черновик</button><button class="btn-o" onclick="enterEditMode()">Редактировать</button><button class="btn-del" onclick="confirmDelEntry()">Удалить</button></div></div>
+      <div id="ev-tags-row"></div><div id="ev-date-row"></div>
       <div id="ev-body-wrap"><div id="ev-body"></div></div>
-      <div id="ev-drafts">
-        <div class="evd-head">ЧЕРНОВИКИ <button class="btn-g" style="font-size:10px;font-family:var(--mono)" onclick="openDraftModal()">+ добавить</button></div>
-        <div id="ev-drafts-list"></div>
-      </div>
+      <div id="ev-drafts"><div class="evd-head">ЧЕРНОВИКИ <button class="btn-g" style="font-size:10px;font-family:var(--mono)" onclick="openDraftModal()">+ добавить</button></div><div id="ev-drafts-list"></div></div>
     </div>
     <div id="editor-edit">
-      <div id="ee-topbar">
-        <div class="ee-topbar-l" id="ee-mode-label">НОВАЯ ЗАПИСЬ</div>
-        <div class="ee-topbar-r">
-          <button class="btn-g" onclick="cancelEdit()">Отмена</button>
-          <button class="btn-p" onclick="saveEntry()">Сохранить</button>
-        </div>
-      </div>
+      <div id="ee-topbar"><div class="ee-topbar-l" id="ee-mode-label">НОВАЯ ЗАПИСЬ</div><div class="ee-topbar-r"><button class="btn-g" onclick="cancelEdit()">Отмена</button><button class="btn-p" onclick="saveEntry()">Сохранить</button></div></div>
       <input id="ee-title" type="text" placeholder="Заголовок записи...">
-      <div id="ee-tag-area">
-        <input id="ee-tag-input" placeholder="+ тег" onkeydown="handleTagKey(event)">
-      </div>
+      <div id="ee-tag-area"><input id="ee-tag-input" placeholder="+ тег" onkeydown="handleTagKey(event)"></div>
       <textarea id="ee-body" placeholder="Идея, план, анализ, детали...&#10;&#10;Пиши свободно."></textarea>
-      <div id="ee-statusbar">
-        <span id="ee-wc">0 слов</span>
-        <span id="ee-saved"></span>
-      </div>
+      <div id="ee-statusbar"><span id="ee-wc">0 слов</span><span id="ee-saved"></span></div>
     </div>
   </div>
 </div>
 
-<div id="overlay" onclick="handleBgClick(event)">
-  <div id="mbox"></div>
-</div>
+<div id="overlay" onclick="handleBgClick(event)"><div id="mbox"></div></div>
 
 <script type="module">
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-import { getFirestore, collection, doc, onSnapshot,
-         setDoc, deleteDoc, serverTimestamp,
-         getDocs, query, where, updateDoc, arrayUnion }
+import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, serverTimestamp,
+         getDocs, query, where, updateDoc, arrayUnion, arrayRemove, getDoc as getOne }
                              from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged,
-         signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut }
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut }
                              from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 
 const app = initializeApp({
@@ -375,22 +373,20 @@ const app = initializeApp({
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let currentUser = null;
-let authMode = 'login';
+let currentUser = null, authMode = 'login';
 let unsubLines = null, unsubEntries = null, unsubSharedLines = null, unsubSharedEntries = [];
-
-let lines = [], entries = {};
-let sharedLines = [], sharedEntries = {};
+let lines = [], entries = {}, sharedLines = [], sharedEntries = {};
 let activeLineId = null, activeEntryId = null, isSharedLine = false;
-let currentView = 'entries';
-let isNew = false, _eTags = [];
+let currentView = 'entries', isNew = false, _eTags = [];
 let _nlIcon = '💡', _nlColor = '#C8A96E', _nlShared = false;
+let myProfile = null, friends = {}, profileEntryCount = 0;
 
 const ICONS  = ['💡','✈','🏦','☕','🏭','🌐','🚀','📦','🏗','💎','🎯','📊','🔑','🛢','📋','🧭','🏠','⚡'];
 const COLORS = ['#C8A96E','#7EB8A4','#E07B7B','#7BA7E0','#B07BE0','#E0B47B','#7BE0C8','#E07BB8','#A0E07B','#E0D47B'];
+const AVATAR_CLRS = ['#C8A96E','#7EB8A4','#E07B7B','#7BA7E0','#B07BE0','#E0B47B','#7BE0C8','#E07BB8','#A0E07B','#E0D47B','#D4A87A','#7AA7D4'];
 
 const genId = () => 'id' + Date.now() + Math.random().toString(36).slice(2,6);
-const esc   = s => String(s||'').replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"');
+const esc = s => String(s||'').replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"');
 const fmt = ts => { if(!ts)return''; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}); };
 const activeLine = () => isSharedLine ? sharedLines.find(l=>l.id===activeLineId) : lines.find(l=>l.id===activeLineId);
 const allEntries = () => isSharedLine ? (sharedEntries[activeLineId]||[]) : (entries[activeLineId]||[]);
@@ -399,6 +395,55 @@ const activeEntry = () => lineEntries().find(e=>e.id===activeEntryId);
 const wc = s => (s||'').trim().split(/\s+/).filter(Boolean).length;
 function syncDot(st) { const d=document.getElementById('sync-dot'); d.className='sync-dot'+(st==='syncing'?' syncing':st==='error'?' error':''); }
 function uid() { return currentUser?.uid; }
+
+function getAvatar(handle) {
+  if(!handle) return ['?','#444'];
+  const sum = handle.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const clr = AVATAR_CLRS[sum % AVATAR_CLRS.length];
+  const init = handle.slice(0,2).toUpperCase();
+  return [init, clr];
+}
+
+function avatarHTML(handle) {
+  const [init, clr] = getAvatar(handle);
+  return `<span class="avatar" style="background:${clr}">${esc(init)}</span>`;
+}
+function avatarSmallHTML(handle) {
+  const [init, clr] = getAvatar(handle);
+  return `<span class="avatar avatar-sm" style="background:${clr}">${esc(init)}</span>`;
+}
+
+function myRole(line) {
+  if(!line||!line.members) return null;
+  return line.members[uid()]?.role || (line.ownerId===uid() ? 'admin' : null);
+}
+function canWrite() {
+  if(!isSharedLine) return true;
+  const r = myRole(activeLine());
+  return r==='admin'||r==='partner';
+}
+function canDelete() {
+  if(!isSharedLine) return true;
+  const r = myRole(activeLine());
+  return r==='admin';
+}
+function canManage() {
+  if(!isSharedLine) return false;
+  return activeLine()?.ownerId===uid();
+}
+
+async function loadProfile(uid) {
+  const snap = await getOne(doc(db,'users',uid,'profile'));
+  if(snap.exists()) return snap.data();
+  return null;
+}
+
+async function loadFriends() {
+  if(!uid()) { friends={}; return; }
+  const snap = await getDocs(collection(db,'users',uid(),'friends'));
+  friends = {};
+  snap.docs.forEach(d=>{ friends[d.id] = {id:d.id,...d.data()}; });
+}
 
 function startFirestoreListeners(uid) {
   if(unsubLines)unsubLines(); if(unsubEntries)unsubEntries();
@@ -414,10 +459,14 @@ function startFirestoreListeners(uid) {
     entries={}; snap.docs.forEach(d=>{ const e={id:d.id,...d.data()}; if(!entries[e.lineId])entries[e.lineId]=[]; entries[e.lineId].push(e); });
     renderSidebar(); renderList(); if(activeEntryId&&!isSharedLine)refreshViewPanel();
     document.getElementById('loading').style.display='none'; syncDot('ok');
+    // update profile entry count
+    let ct=0; Object.values(entries).forEach(arr=>ct+=arr.length);
+    sharedLines.forEach(sl=>ct+=(sharedEntries[sl.id]||[]).length);
+    profileEntryCount=ct;
   },()=>{syncDot('error');document.getElementById('loading').style.display='none';});
 
   unsubSharedLines = onSnapshot(collection(db,'sharedLines'), snap => {
-    sharedLines=[]; snap.docs.forEach(d=>{ const sl={id:d.id,...d.data()}; if(sl.ownerId===uid||(sl.members||[]).includes(uid))sharedLines.push(sl); });
+    sharedLines=[]; snap.docs.forEach(d=>{ const sl={id:d.id,...d.data()}; if(sl.ownerId===uid||(sl.members||{})[uid] )sharedLines.push(sl); });
     sharedLines.sort((a,b)=>(a.order||0)-(b.order||0));
     unsubSharedEntries.forEach(u=>u()); unsubSharedEntries=[];
     sharedLines.forEach(sl=>{ const u=onSnapshot(collection(db,'sharedLines',sl.id,'entries'),snap2=>{ sharedEntries[sl.id]=snap2.docs.map(d=>({id:d.id,...d.data()})); renderSidebar(); renderList(); if(isSharedLine&&activeEntryId)refreshViewPanel(); }); unsubSharedEntries.push(u); });
@@ -431,6 +480,7 @@ function stopFirestoreListeners() {
   if(unsubLines){unsubLines();unsubLines=null;} if(unsubEntries){unsubEntries();unsubEntries=null;}
   if(unsubSharedLines){unsubSharedLines();unsubSharedLines=null;} unsubSharedEntries.forEach(u=>u()); unsubSharedEntries=[];
   lines=[];entries={};sharedLines=[];sharedEntries={}; activeLineId=null;activeEntryId=null;isSharedLine=false;
+  myProfile=null; friends={}; profileEntryCount=0;
 }
 
 async function saveLine(id,data,shared){syncDot('syncing');if(shared)await setDoc(doc(db,'sharedLines',id),data,{merge:true});else await setDoc(doc(db,'users',uid(),'lines',id),data,{merge:true});}
@@ -440,21 +490,19 @@ async function delLineDoc(id){syncDot('syncing');if(isSharedLine){(sharedEntries
 
 function renderSidebar() {
   const personalHTML = lines.map(l=>`<div class="line-item ${l.id===activeLineId&&!isSharedLine?'active':''}" style="border-left-color:${l.color}" onclick="selectLine('${l.id}',false)"><span class="li-icon">${l.icon}</span><span class="li-name">${esc(l.name)}</span><span class="li-count" style="color:${l.color}">${(entries[l.id]||[]).length}</span></div>`).join('');
-  const sharedHTML = sharedLines.map(l=>`<div class="line-item shared ${l.id===activeLineId&&isSharedLine?'active':''}" style="border-left-color:${l.color}" onclick="selectLine('${l.id}',true)"><span class="li-icon">${l.icon}</span><span class="li-name">${esc(l.name)}</span><span class="li-count" style="color:${l.color}">${(sharedEntries[l.id]||[]).length}</span></div>`).join('');
-
-  const container = document.getElementById('lines-list');
-  if(sharedLines.length) {
-    container.innerHTML = personalHTML + '<div class="sb-shared-section"><div class="sb-section">СОВМЕСТНЫЕ</div></div>' + sharedHTML;
-  } else {
-    container.innerHTML = personalHTML;
-  }
-  const te = lines.reduce((a,l)=>a+(entries[l.id]||[]).length,0) + sharedLines.reduce((a,l)=>a+(sharedEntries[l.id]||[]).length,0);
-  const td = lines.reduce((a,l)=>a+(entries[l.id]||[]).reduce((b,e)=>b+(e.drafts?.length||0),0),0) + sharedLines.reduce((a,l)=>a+(sharedEntries[l.id]||[]).reduce((b,e)=>b+(e.drafts?.length||0),0),0);
+  const sharedHTML = sharedLines.map(l=>{
+    const role=myRole(l); const roleLabel=role==='admin'?'упр':role==='partner'?'пиш':'чит';
+    return `<div class="line-item shared ${l.id===activeLineId&&isSharedLine?'active':''}" style="border-left-color:${l.color}" onclick="selectLine('${l.id}',true)"><span class="li-icon">${l.icon}</span><span class="li-name">${esc(l.name)}</span><span class="li-role role-badge role-${role||'reader'}">${roleLabel}</span><span class="li-count" style="color:${l.color}">${(sharedEntries[l.id]||[]).length}</span></div>`;
+  }).join('');
+  const container=document.getElementById('lines-list');
+  container.innerHTML = personalHTML + (sharedLines.length?'<div class="sb-shared-section"><div class="sb-section">СОВМЕСТНЫЕ</div></div>'+sharedHTML:'');
+  const te=lines.reduce((a,l)=>a+(entries[l.id]||[]).length,0)+sharedLines.reduce((a,l)=>a+(sharedEntries[l.id]||[]).length,0);
+  const td=lines.reduce((a,l)=>a+(entries[l.id]||[]).reduce((b,e)=>b+(e.drafts?.length||0),0),0)+sharedLines.reduce((a,l)=>a+(sharedEntries[l.id]||[]).reduce((b,e)=>b+(e.drafts?.length||0),0),0);
   document.getElementById('stat-e').textContent=te; document.getElementById('stat-d').textContent=td;
 }
 
-function renderList() {
-  const line = activeLine(); const scroll=document.getElementById('entries-scroll'); const lhTitle=document.getElementById('lh-title');
+function renderList(){
+  const line=activeLine(); const scroll=document.getElementById('entries-scroll'); const lhTitle=document.getElementById('lh-title');
   if(!line){scroll.innerHTML='';lhTitle.textContent='—';return;}
   lhTitle.innerHTML = `<span style="color:${line.color}">${line.icon}</span> ${esc(line.name)}${isSharedLine?' <span style="font-size:8px;color:var(--gold);font-family:var(--mono)">⇄</span>':''}`;
   document.getElementById('pill-e').className='vpill'+(currentView==='entries'?' active':'');
@@ -464,7 +512,7 @@ function renderList() {
     let list=lineEntries().filter(e=>{if(!q)return true;return(e.title||'').toLowerCase().includes(q)||(e.body||'').toLowerCase().includes(q)||(e.tags||[]).some(t=>t.toLowerCase().includes(q));});
     if(!list.length){scroll.innerHTML=`<div style="padding:30px 14px;text-align:center;color:var(--dim);font-size:12px">${q?'Ничего не найдено':'Нет записей'}</div>`;return;}
     scroll.innerHTML=list.map(e=>{const tags=(e.tags||[]).map(t=>`<span class="er-tag" style="background:${line.color}20;color:${line.color}">${esc(t)}</span>`).join('');const dc=e.drafts?.length||0;return`<div class="entry-row ${e.id===activeEntryId?'active':''}" onclick="selectEntry('${e.id}')"><div class="er-title">${esc(e.title||'Без названия')}</div><div class="er-preview">${esc(e.body||'')}</div><div class="er-meta"><div class="er-tags">${tags}</div><div class="er-date">${fmt(e.updatedAt)}</div></div>${dc?`<div class="er-dc" style="color:${line.color}">${dc} черн.</div>`:''}</div>`;}).join('');
-  } else {
+  }else{
     const allDrafts=[]; lineEntries().forEach(e=>(e.drafts||[]).forEach(d=>allDrafts.push({...d,entryId:e.id,entryTitle:e.title})));
     if(!allDrafts.length){scroll.innerHTML=`<div style="padding:30px 14px;text-align:center;color:var(--dim);font-size:12px">Нет черновиков</div>`;return;}
     scroll.innerHTML=allDrafts.map(d=>`<div class="draft-row"><div class="dr-title">${esc(d.title||'Черновик')}</div><div class="dr-preview">${esc(d.body||'')}</div><div class="dr-meta"><span style="font-size:9px;color:var(--dim);font-family:var(--mono)">→ ${esc(d.entryTitle||'?')}</span><button class="btn-del" style="font-size:10px" onclick="deleteDraft('${d.entryId}','${d.id}')">удалить</button></div></div>`).join('');
@@ -489,13 +537,14 @@ window.selectLine = function(id,shared){isSharedLine=!!shared;activeLineId=id;ac
 window.setView = function(v){currentView=v;renderList();};
 window.selectEntry = function(id){activeEntryId=id;renderList();refreshViewPanel();};
 window.cancelEdit = function(){if(isNew){showPanel('empty');activeEntryId=null;renderList();}else refreshViewPanel();};
-window.enterEditMode = ()=>enterEditMode(false);
+window.enterEditMode = ()=>{if(isSharedLine&&!canWrite()){alert('У вас нет прав на запись в этой линии');return;}enterEditMode(false);};
 window.handleTagKey = function(e){if(e.key==='Enter'||e.key===','){e.preventDefault();addTag();}};
 window.addTag = function(){const inp=document.getElementById('ee-tag-input');const v=(inp.value||'').replace(/,/g,'').trim();if(v&&!_eTags.includes(v))_eTags.push(v);inp.value='';renderEditTags();};
 window.removeTag = function(t){_eTags=_eTags.filter(x=>x!==t);renderEditTags();};
 document.getElementById('ee-body').addEventListener('input',updateWC);
 
 window.saveEntry = async function(){
+  if(isSharedLine&&!canWrite())return;
   const title=document.getElementById('ee-title').value||''; const body=document.getElementById('ee-body').value||''; const line=activeLine(); if(!line)return;
   document.getElementById('ee-saved').textContent='сохранение...';
   if(isNew){const id=genId();await saveEntryDoc(id,{lineId:activeLineId,title,body,tags:[..._eTags],drafts:[],createdAt:serverTimestamp(),updatedAt:serverTimestamp()});activeEntryId=id;}
@@ -503,10 +552,17 @@ window.saveEntry = async function(){
   document.getElementById('ee-saved').textContent='сохранено ✓'; setTimeout(()=>{document.getElementById('ee-saved').textContent='';refreshViewPanel();},800);
 };
 
-window.confirmDelEntry = async function(){const e=activeEntry();if(!e)return;if(!confirm(`Удалить "${e.title||'эту запись'}"?`))return;await delEntryDoc(e.id);activeEntryId=null;showPanel('empty');};
+window.confirmDelEntry = async function(){
+  if(isSharedLine&&!canDelete()){alert('Только администратор может удалять записи');return;}
+  const e=activeEntry();if(!e)return;if(!confirm(`Удалить "${e.title||'эту запись'}"?`))return;await delEntryDoc(e.id);activeEntryId=null;showPanel('empty');
+};
 window.deleteDraft = async function(entryId,draftId){const e=lineEntries().find(x=>x.id===entryId);if(!e)return;const drafts=(e.drafts||[]).filter(d=>d.id!==draftId);await saveEntryDoc(entryId,{drafts});};
-window.confirmDelLine = async function(){const line=activeLine();if(!line)return;if(!confirm(`Удалить линию "${line.name}" и все её записи?`))return;await delLineDoc(line.id);activeLineId=isSharedLine?null:(lines.find(l=>l.id!==line.id)?.id||null);if(!activeLineId&&sharedLines.length){activeLineId=sharedLines[0].id;isSharedLine=true;}activeEntryId=null;showPanel('empty');renderSidebar();renderList();};
-window.openNewEntry = function(){enterEditMode(true);};
+window.confirmDelLine = async function(){
+  const line=activeLine();if(!line)return;if(isSharedLine&&!canManage()){alert('Только создатель может удалить линию');return;}
+  if(!confirm(`Удалить линию "${line.name}" и все её записи?`))return;await delLineDoc(line.id);
+  activeLineId=isSharedLine?null:(lines.find(l=>l.id!==line.id)?.id||null);if(!activeLineId&&sharedLines.length){activeLineId=sharedLines[0].id;isSharedLine=true;}activeEntryId=null;showPanel('empty');renderSidebar();renderList();
+};
+window.openNewEntry = function(){if(isSharedLine&&!canWrite()){alert('У вас нет прав на запись в этой линии');return;}enterEditMode(true);};
 
 window.openNewLineModal = function(){_nlIcon=ICONS[0];_nlColor=COLORS[0];_nlShared=false;renderNLModal();};
 function renderNLModal(){
@@ -517,73 +573,197 @@ function renderNLModal(){
       <button class="btn-o" style="flex:1;text-align:center;${!_nlShared?'background:var(--gold);color:#0F0F0F;border-color:var(--gold)':''}" onclick="_nlShared=false;renderNLModal()">🙋 Личная</button>
       <button class="btn-o" style="flex:1;text-align:center;${_nlShared?'background:var(--gold);color:#0F0F0F;border-color:var(--gold)':''}" onclick="_nlShared=true;renderNLModal()">🌐 Совместная</button>
     </div>
-    <label class="m-lbl">НАЗВАНИЕ</label>
-    <input class="m-in" id="nl-name" placeholder="Например: KUE" value="${esc(v)}" autofocus>
-    <label class="m-lbl">ИКОНКА</label>
-    <div class="icon-grid">${ICONS.map(i=>`<button class="ico-b ${i===_nlIcon?'sel':''}" onclick="pickIcon('${i}')">${i}</button>`).join('')}</div>
-    <label class="m-lbl">ЦВЕТ</label>
-    <div class="clr-grid">${COLORS.map(c=>`<button class="clr-b ${c===_nlColor?'sel':''}" style="background:${c}" onclick="pickClr('${c}')"></button>`).join('')}</div>
-    ${_nlShared?'<div id="nl-after-create" style="color:var(--dim);font-size:10px;margin-bottom:10px;font-family:var(--sans)">После создания вы сможете добавить участников.</div>':''}
+    <label class="m-lbl">НАЗВАНИЕ</label><input class="m-in" id="nl-name" placeholder="Например: KUE" value="${esc(v)}" autofocus>
+    <label class="m-lbl">ИКОНКА</label><div class="icon-grid">${ICONS.map(i=>`<button class="ico-b ${i===_nlIcon?'sel':''}" onclick="pickIcon('${i}')">${i}</button>`).join('')}</div>
+    <label class="m-lbl">ЦВЕТ</label><div class="clr-grid">${COLORS.map(c=>`<button class="clr-b ${c===_nlColor?'sel':''}" style="background:${c}" onclick="pickClr('${c}')"></button>`).join('')}</div>
     <div class="m-act"><button class="btn-g" onclick="closeModal()">Отмена</button><button class="btn-p" onclick="submitNewLine()">Создать</button></div>`);
   setTimeout(()=>document.getElementById('nl-name')?.focus(),50);
 }
 window.pickIcon = i=>{_nlIcon=i;renderNLModal();};
 window.pickClr  = c=>{_nlColor=c;renderNLModal();};
 window.submitNewLine = async function(){
-  const name=(document.getElementById('nl-name').value||'').trim(); if(!name)return;
-  const id=genId();
+  const name=(document.getElementById('nl-name').value||'').trim(); if(!name)return; const id=genId();
   if(_nlShared){
-    await saveLine(id,{name,icon:_nlIcon,color:_nlColor,order:sharedLines.length,ownerId:uid(),members:[uid()],createdAt:serverTimestamp()},true);
-    closeModal();
-    setTimeout(()=>openAddMemberModal(id),400);
-  } else {
-    await saveLine(id,{name,icon:_nlIcon,color:_nlColor,order:lines.length},false);
-    closeModal();
-  }
+    const membersObj = {}; membersObj[uid()] = {role:'admin'};
+    await saveLine(id,{name,icon:_nlIcon,color:_nlColor,order:sharedLines.length,ownerId:uid(),members:membersObj,createdAt:serverTimestamp()},true);
+    closeModal(); setTimeout(()=>openManageMembersModal(id),400);
+  }else{await saveLine(id,{name,icon:_nlIcon,color:_nlColor,order:lines.length},false);closeModal();}
 };
 
-window.openAddMemberModal = function(lineId){
-  openModal(`<div class="m-title">Добавить участника</div>
-    <label class="m-lbl">НИКНЕЙМ УЧАСТНИКА</label>
-    <input class="m-in" id="am-handle" placeholder="Например: aibek_kue" autofocus>
-    <div id="am-error" style="background:#2a1515;border:1px solid #4a2222;border-radius:3px;color:#d47373;font-size:11px;padding:8px 10px;margin-bottom:14px;display:none;font-family:var(--sans)"></div>
-    <div id="am-success" style="background:#1a2a15;border:1px solid #2a4a22;border-radius:3px;color:#73d473;font-size:11px;padding:8px 10px;margin-bottom:14px;display:none;font-family:var(--sans)"></div>
-    <div class="m-act"><button class="btn-g" onclick="closeModal()">Готово</button><button class="btn-p" onclick="addMemberToLine('${lineId}')">Добавить</button></div>
-    <div style="margin-top:12px;font-size:10px;color:var(--dim);font-family:var(--sans)">Участники: ${(sharedLines.find(l=>l.id===lineId)?.members||[]).join(', ')||'только вы'}</div>`);
-  setTimeout(()=>document.getElementById('am-handle')?.focus(),50);
+window.openManageMembersModal = function(lineId){
+  const line=sharedLines.find(l=>l.id===lineId); if(!line)return;
+  const members=line.members||{};
+  const memberRows=Object.entries(members).map(([muid,info])=>{
+    const role=info.role||'reader';
+    return `<div class="member-row">
+      ${avatarSmallHTML(info.handle||muid)}
+      <span class="mem-name">${esc(info.handle||muid)}</span>
+      <span class="mem-role role-badge role-${role}">${role==='admin'?'админ':role==='partner'?'партнёр':'читатель'}</span>
+      ${line.ownerId===uid()&&muid!==uid()?`
+        <select onchange="changeMemberRole('${lineId}','${muid}',this.value)" style="margin-left:4px">
+          <option value="admin" ${role==='admin'?'selected':''}>админ</option>
+          <option value="partner" ${role==='partner'?'selected':''}>партнёр</option>
+          <option value="reader" ${role==='reader'?'selected':''}>читатель</option>
+        </select>
+        <span class="mem-remove" onclick="removeMember('${lineId}','${muid}')">✕</span>`:''}
+    </div>`;
+  }).join('');
+  openModal(`<div class="m-title">Участники линии</div>
+    ${memberRows||'<div style="color:var(--dim);font-size:11px">Нет участников</div>'}
+    ${line.ownerId===uid()?`
+    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
+      <label class="m-lbl">ДОБАВИТЬ УЧАСТНИКА</label>
+      <div style="display:flex;gap:6px">
+        <input class="m-in" id="am-handle" placeholder="Никнейм или ID" style="margin-bottom:0;flex:1">
+        <button class="btn-p" onclick="addMemberToLine('${lineId}')" style="padding:7px 12px;flex-shrink:0">+</button>
+      </div>
+      <div id="am-error" style="background:#2a1515;border:1px solid #4a2222;border-radius:3px;color:#d47373;font-size:11px;padding:8px 10px;margin-top:8px;display:none;font-family:var(--sans)"></div>
+      <div id="am-success" style="background:#1a2a15;border:1px solid #2a4a22;border-radius:3px;color:#73d473;font-size:11px;padding:8px 10px;margin-top:8px;display:none;font-family:var(--sans)"></div>
+    </div>`:''}
+    <div class="m-act"><button class="btn-g" onclick="closeModal()">Закрыть</button></div>`);
+  setTimeout(()=>{const inp=document.getElementById('am-handle');if(inp)inp.focus();},50);
 };
+
+window.changeMemberRole = async function(lineId,memberUid,newRole){
+  const updateObj = {}; updateObj[`members.${memberUid}.role`] = newRole;
+  await updateDoc(doc(db,'sharedLines',lineId), updateObj);
+};
+
+window.removeMember = async function(lineId,memberUid){
+  if(!confirm('Удалить участника?'))return;
+  const updateObj = {}; updateObj[`members.${memberUid}`] = deleteField();
+  await updateDoc(doc(db,'sharedLines',lineId), updateObj);
+  // Need deleteField from Firestore - we'll use a workaround
+  // Manually reconstruct members without the removed one
+  const line=sharedLines.find(l=>l.id===lineId);
+  if(!line)return;
+  const newMembers = {...line.members}; delete newMembers[memberUid];
+  await updateDoc(doc(db,'sharedLines',lineId), {members:newMembers});
+  setTimeout(()=>openManageMembersModal(lineId),300);
+};
+
+function deleteField() {
+  // Firestore FieldValue.delete() workaround: we just remove from object on next read
+  // For the removeMember we handle it via full members object replacement
+  return null;
+}
+
 window.addMemberToLine = async function(lineId){
   const handle=(document.getElementById('am-handle').value||'').trim().toLowerCase();
   const errEl=document.getElementById('am-error'); const sucEl=document.getElementById('am-success');
   errEl.style.display='none'; sucEl.style.display='none';
-  if(!handle){errEl.textContent='Введите никнейм';errEl.style.display='block';return;}
-  if(!/^[a-z0-9_]{3,24}$/.test(handle)){errEl.textContent='Некорректный формат никнейма';errEl.style.display='block';return;}
-  const line=sharedLines.find(l=>l.id===lineId);
-  if(!line){errEl.textContent='Линия не найдена';errEl.style.display='block';return;}
-  if(line.ownerId!==uid()){errEl.textContent='Только создатель может добавлять участников';errEl.style.display='block';return;}
+  if(!handle){errEl.textContent='Введите никнейм или ID';errEl.style.display='block';return;}
 
-  const snap=await getDocs(query(collection(db,'users'),where('handle','==',handle)));
-  if(snap.empty){errEl.textContent='Пользователь с таким никнеймом не найден';errEl.style.display='block';return;}
-  const profile=snap.docs[0].data();
-  if(line.members.includes(profile.uid)){errEl.textContent='Этот пользователь уже участник';errEl.style.display='block';return;}
-  await updateDoc(doc(db,'sharedLines',lineId),{members:arrayUnion(profile.uid)});
+  const line=sharedLines.find(l=>l.id===lineId);
+  if(!line||line.ownerId!==uid()){errEl.textContent='Только создатель может добавлять участников';errEl.style.display='block';return;}
+
+  let targetUid=null, targetHandle=null;
+  // Try as numeric ID
+  if(/^\d{6}$/.test(handle)){
+    const snapById=await getDocs(query(collection(db,'users'),where('numericId','==',parseInt(handle))));
+    if(!snapById.empty){ targetUid=snapById.docs[0].id; targetHandle=snapById.docs[0].data().handle; }
+  }
+  // Try as handle
+  if(!targetUid){
+    const snapByHandle=await getDocs(query(collection(db,'users'),where('handle','==',handle)));
+    if(!snapByHandle.empty){ targetUid=snapByHandle.docs[0].id; targetHandle=snapByHandle.docs[0].data().handle; }
+  }
+  if(!targetUid){errEl.textContent='Пользователь не найден';errEl.style.display='block';return;}
+  if(targetUid===uid()){errEl.textContent='Вы уже в линии';errEl.style.display='block';return;}
+  if(line.members&&line.members[targetUid]){errEl.textContent='Этот пользователь уже участник';errEl.style.display='block';return;}
+
+  const updateObj = {}; updateObj[`members.${targetUid}`] = {role:'reader',handle:targetHandle};
+  await updateDoc(doc(db,'sharedLines',lineId), updateObj);
   sucEl.textContent='Участник добавлен!'; sucEl.style.display='block';
   document.getElementById('am-handle').value='';
-  setTimeout(()=>{if(document.getElementById('overlay').classList.contains('open'))openAddMemberModal(lineId);},1200);
+  setTimeout(()=>{if(document.getElementById('overlay').classList.contains('open'))openManageMembersModal(lineId);},1200);
+};
+
+window.openProfile = async function(){
+  if(!myProfile) return;
+  document.getElementById('profile-panel').classList.add('open');
+  await renderProfilePanel();
+};
+
+window.handleProfileBgClick = function(e){if(e.target===document.getElementById('profile-panel'))closeProfile();};
+window.closeProfile = function(){document.getElementById('profile-panel').classList.remove('open');};
+
+async function renderProfilePanel(){
+  if(!myProfile) return;
+  await loadFriends();
+  const card=document.getElementById('profile-card');
+  const friendRows=Object.values(friends).map(f=>{
+    const [init,clr]=getAvatar(f.handle||f.id);
+    return `<div class="friend-row"><span class="avatar avatar-sm" style="background:${clr}">${esc(init)}</span><span class="fr-name">${esc(f.handle||f.id)}</span><span class="fr-status">${f.status==='pending'?'ожидает':f.status==='accepted'?'друг':'заявка'}</span></div>`;
+  }).join('')||'<div style="color:var(--dim);font-size:11px">Нет друзей</div>';
+
+  card.innerHTML = `
+    <div class="prof-top">
+      ${avatarHTML(myProfile.handle)}
+      <div class="prof-info">
+        <div class="prof-name">${esc(myProfile.handle||'?')}</div>
+        <div class="prof-handle">@${esc(myProfile.handle||'?')}</div>
+        <div class="prof-id">ID: ${myProfile.numericId||'—'}</div>
+      </div>
+    </div>
+    <div class="prof-stat-row">
+      <div class="prof-stat"><span class="ps-num">${profileEntryCount}</span><span class="ps-lbl">записей</span></div>
+      <div class="prof-stat"><span class="ps-num">${Object.values(friends).filter(f=>f.status==='accepted').length}</span><span class="ps-lbl">друзей</span></div>
+    </div>
+    <div class="prof-section-title">ДРУЗЬЯ</div>
+    ${friendRows}
+    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
+      <label class="m-lbl">ДОБАВИТЬ ДРУГА</label>
+      <div style="display:flex;gap:6px">
+        <input class="m-in" id="pf-friend-input" placeholder="Никнейм или ID" style="margin-bottom:0;flex:1">
+        <button class="btn-p" onclick="addFriend()" style="padding:7px 12px;flex-shrink:0">+</button>
+      </div>
+      <div id="pf-friend-msg" style="margin-top:6px;font-size:10px;font-family:var(--sans);display:none"></div>
+    </div>
+    <div class="m-act" style="margin-top:12px"><button class="btn-g" onclick="closeProfile()">Закрыть</button></div>`;
+}
+
+window.addFriend = async function(){
+  const inp=document.getElementById('pf-friend-input'); const msg=document.getElementById('pf-friend-msg');
+  const val=(inp.value||'').trim().toLowerCase(); msg.style.display='none';
+  if(!val){msg.textContent='Введите никнейм или ID';msg.style.color='#d47373';msg.style.display='block';return;}
+
+  let targetUid=null,targetHandle=null;
+  if(/^\d{6}$/.test(val)){
+    const snap=await getDocs(query(collection(db,'users'),where('numericId','==',parseInt(val))));
+    if(!snap.empty){targetUid=snap.docs[0].id;targetHandle=snap.docs[0].data().handle;}
+  }
+  if(!targetUid){
+    const snap=await getDocs(query(collection(db,'users'),where('handle','==',val)));
+    if(!snap.empty){targetUid=snap.docs[0].id;targetHandle=snap.docs[0].data().handle;}
+  }
+  if(!targetUid){msg.textContent='Пользователь не найден';msg.style.color='#d47373';msg.style.display='block';return;}
+  if(targetUid===uid()){msg.textContent='Нельзя добавить себя';msg.style.color='#d47373';msg.style.display='block';return;}
+  // Check if already friend
+  const existing=await getOne(doc(db,'users',uid(),'friends',targetUid));
+  if(existing.exists()){
+    if(existing.data().status==='accepted'){msg.textContent='Уже в друзьях';msg.style.color='var(--dim)';msg.style.display='block';return;}
+    if(existing.data().status==='pending'){msg.textContent='Заявка уже отправлена';msg.style.color='var(--dim)';msg.style.display='block';return;}
+  }
+  await setDoc(doc(db,'users',uid(),'friends',targetUid),{status:'pending',handle:targetHandle||targetUid,createdAt:Date.now()});
+  // Also create reciprocal request (they'll see as incoming)
+  await setDoc(doc(db,'users',targetUid,'friends',uid()),{status:'incoming',handle:myProfile.handle,createdAt:Date.now()});
+  msg.textContent='Заявка отправлена!'; msg.style.color='#73d473'; msg.style.display='block';
+  inp.value='';
+  setTimeout(()=>{if(document.getElementById('profile-panel').classList.contains('open'))renderProfilePanel();},600);
 };
 
 window.openDraftModal = function(){const e=activeEntry();if(!e)return;openModal(`<div class="m-title">Новый черновик</div><label class="m-lbl">НАЗВАНИЕ (необязательно)</label><input class="m-in" id="dr-t" placeholder="Отрывок, набросок..."><label class="m-lbl">ТЕКСТ</label><textarea class="m-in m-ta" id="dr-b" placeholder="Сырая идея, вопрос, фрагмент мысли..."></textarea><div class="m-act"><button class="btn-g" onclick="closeModal()">Отмена</button><button class="btn-p" onclick="submitDraft('${e.id}')">Сохранить черновик</button></div>`);setTimeout(()=>document.getElementById('dr-b')?.focus(),50);};
 window.submitDraft = async function(entryId){const e=lineEntries().find(x=>x.id===entryId);if(!e)return;const title=document.getElementById('dr-t').value||'';const body=document.getElementById('dr-b').value||'';const drafts=[...(e.drafts||[]),{id:genId(),title,body,createdAt:Date.now()}];await saveEntryDoc(entryId,{drafts});closeModal();};
 
 function openModal(html){document.getElementById('mbox').innerHTML=html;document.getElementById('overlay').classList.add('open');}
-window.closeModal = ()=>document.getElementById('overlay').classList.remove('open');
+window.closeModal = ()=>{document.getElementById('overlay').classList.remove('open');};
 window.handleBgClick = e=>{if(e.target===document.getElementById('overlay'))closeModal();};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();}if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();if(document.getElementById('editor-edit').style.display!=='none')window.saveEntry();}if((e.ctrlKey||e.metaKey)&&e.key==='n'){e.preventDefault();window.openNewEntry();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeProfile();}if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();if(document.getElementById('editor-edit').style.display!=='none')window.saveEntry();}if((e.ctrlKey||e.metaKey)&&e.key==='n'){e.preventDefault();window.openNewEntry();}});
 
 const listHead=document.getElementById('list-head'); const extraRow=document.createElement('div'); extraRow.style='display:flex;gap:5px;justify-content:space-between;align-items:center;'; extraRow.innerHTML=`<button class="btn-p" style="font-size:10px;padding:5px 12px" onclick="openNewEntry()">+ запись</button><button class="btn-del" style="font-size:10px" onclick="confirmDelLine()">удалить линию</button>`; listHead.appendChild(extraRow);
 
 window.toggleAuthMode = function(){authMode=authMode==='login'?'register':'login';document.getElementById('auth-submit').textContent=authMode==='login'?'Войти':'Зарегистрироваться';document.getElementById('auth-toggle').innerHTML=authMode==='login'?'Нет аккаунта? <a id="auth-toggle-link" onclick="toggleAuthMode()">Зарегистрироваться</a>':'Уже есть аккаунт? <a id="auth-toggle-link" onclick="toggleAuthMode()">Войти</a>';document.getElementById('auth-error').style.display='none';};
-
 window.handleAuthSubmit = async function(){
   const email=document.getElementById('auth-email').value.trim(); const password=document.getElementById('auth-password').value; const errorEl=document.getElementById('auth-error'); const submitBtn=document.getElementById('auth-submit');
   if(!email||!password){errorEl.textContent='Введите email и пароль';errorEl.style.display='block';return;}
@@ -591,9 +771,10 @@ window.handleAuthSubmit = async function(){
   try{if(authMode==='login'){await signInWithEmailAndPassword(auth,email,password);}else{await createUserWithEmailAndPassword(auth,email,password);}}
   catch(err){errorEl.textContent=err.message.replace('Firebase: ','').replace(/\(auth\/.*\)/,'').trim();errorEl.style.display='block';submitBtn.disabled=false;submitBtn.textContent=authMode==='login'?'Войти':'Зарегистрироваться';}
 };
-
 window.handleLogout = async function(){await signOut(auth);};
 document.getElementById('auth-password').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();handleAuthSubmit();}});
+
+function generateNumericId(){return Math.floor(100000+Math.random()*900000);}
 
 window.submitHandle = async function(){
   const handle=(document.getElementById('handle-input').value||'').trim().toLowerCase();
@@ -603,7 +784,10 @@ window.submitHandle = async function(){
   submitBtn.disabled=true; submitBtn.textContent='Проверка...';
   const snap=await getDocs(query(collection(db,'users'),where('handle','==',handle)));
   if(!snap.empty){errEl.textContent='Этот никнейм уже занят. Выберите другой.';errEl.style.display='block';submitBtn.disabled=false;submitBtn.textContent='Продолжить';return;}
-  await setDoc(doc(db,'users',uid(),'profile'),{handle,email:currentUser.email,uid:uid()});
+
+  let numericId;
+  for(let i=0;i<10;i++){numericId=generateNumericId();const nsnap=await getDocs(query(collection(db,'users'),where('numericId','==',numericId)));if(nsnap.empty)break;}
+  await setDoc(doc(db,'users',uid(),'profile'),{handle,email:currentUser.email,uid:uid(),numericId,createdAt:Date.now()});
   document.getElementById('handle-screen').style.display='none';
   document.getElementById('app').style.display='flex';
   document.getElementById('loading').style.display='flex';
@@ -621,6 +805,8 @@ onAuthStateChanged(auth, async user => {
       document.getElementById('app').style.display='none';
       document.getElementById('loading').style.display='none';
     } else {
+      myProfile=profileSnap.docs[0].data();
+      document.getElementById('sb-username').textContent=myProfile.handle||'БЛОКНОТ';
       document.getElementById('handle-screen').style.display='none';
       document.getElementById('app').style.display='flex';
       document.getElementById('loading').style.display='flex';
@@ -629,10 +815,9 @@ onAuthStateChanged(auth, async user => {
     }
   } else {
     currentUser=null; stopFirestoreListeners();
+    document.getElementById('sb-username').textContent='БЛОКНОТ';
     document.getElementById('handle-screen').style.display='none';
-    document.getElementById('auth-screen').style.display='flex';
-    document.getElementById('app').style.display='none';
-    document.getElementById('loading').style.display='none';
+    document.getElementById('auth-screen').style.display='flex'; document.getElementById('app').style.display='none'; document.getElementById('loading').style.display='none';
     document.getElementById('auth-email').value=''; document.getElementById('auth-password').value=''; document.getElementById('auth-error').style.display='none';
     document.getElementById('auth-submit').disabled=false; document.getElementById('auth-submit').textContent='Войти'; authMode='login';
     document.getElementById('auth-toggle').innerHTML='Нет аккаунта? <a id="auth-toggle-link" onclick="toggleAuthMode()">Зарегистрироваться</a>';
