@@ -433,7 +433,7 @@ function canManage() {
 }
 
 async function loadProfile(uid) {
-  const snap = await getOne(doc(db,'users',uid,'profile'));
+  const snap = await getOne(doc(db,'users',uid));
   if(snap.exists()) return snap.data();
   return null;
 }
@@ -787,7 +787,7 @@ window.submitHandle = async function(){
 
   let numericId;
   for(let i=0;i<10;i++){numericId=generateNumericId();const nsnap=await getDocs(query(collection(db,'users'),where('numericId','==',numericId)));if(nsnap.empty)break;}
-  await setDoc(doc(db,'users',uid(),'profile'),{handle,email:currentUser.email,uid:uid(),numericId,createdAt:Date.now()});
+  await setDoc(doc(db,'users',uid()),{handle,email:currentUser.email,uid:uid(),numericId,createdAt:Date.now()});
   document.getElementById('handle-screen').style.display='none';
   document.getElementById('app').style.display='flex';
   document.getElementById('loading').style.display='flex';
@@ -799,13 +799,18 @@ onAuthStateChanged(auth, async user => {
   if(user){
     currentUser=user;
     document.getElementById('auth-screen').style.display='none';
-    const profileSnap=await getDocs(query(collection(db,'users'),where('uid','==',user.uid)));
-    if(profileSnap.empty){
+    let profSnap = await getOne(doc(db,'users',user.uid));
+    if(!profSnap.exists()){
+      // Fallback: search by uid field (for users created before direct-doc migration)
+      const altSnap = await getDocs(query(collection(db,'users'),where('uid','==',user.uid)));
+      if(!altSnap.empty) profSnap = altSnap.docs[0];
+    }
+    if(!profSnap.exists()){
       document.getElementById('handle-screen').style.display='flex';
       document.getElementById('app').style.display='none';
       document.getElementById('loading').style.display='none';
     } else {
-      myProfile=profileSnap.docs[0].data();
+      myProfile=profSnap.data();
       document.getElementById('sb-username').textContent=myProfile.handle||'БЛОКНОТ';
       document.getElementById('handle-screen').style.display='none';
       document.getElementById('app').style.display='flex';
