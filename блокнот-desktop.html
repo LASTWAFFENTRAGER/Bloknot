@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Блокнот — Десктоп</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:     #0F0F0F;
+  --bg2:    #141414;
+  --bg3:    #1C1C1C;
+  --bg4:    #222;
+  --border: #252525;
+  --border2:#333;
+  --gold:   #C8A96E;
+  --gold2:  #a8894e;
+  --text:   #E8E2D9;
+  --muted:  #888;
+  --dim:    #4A4A4A;
+  --mono:   'Courier New', monospace;
+  --serif:  Georgia, 'Times New Roman', serif;
+  --sans:   -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+html, body {
+  height: 100%; background: var(--bg); color: var(--text);
+  font-family: var(--serif); overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ════════════════════════════════════════════
+   LAYOUT  –  3-column: sidebar | list | editor
+   ════════════════════════════════════════════ */
+#app { display: flex; height: 100vh; }
+
+/* ── COL 1: SIDEBAR ── */
+#sidebar {
+  width: 200px; flex-shrink: 0;
+  background: var(--bg2); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+.sb-head {
+  padding: 20px 16px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.sb-logo {
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 5px; color: var(--gold);
+  display: flex; align-items: center; gap: 7px;
+}
+.sb-sub {
+  font-family: var(--mono); font-size: 8px;
+  color: var(--dim); letter-spacing: 2px; margin-top: 4px;
+}
+.sync-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #3a3; flex-shrink: 0;
+  transition: background 0.3s;
+}
+.sync-dot.syncing { background: var(--gold); animation: blink 1s infinite; }
+.sync-dot.error   { background: #c44; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+.sb-section {
+  padding: 14px 14px 6px;
+  font-family: var(--mono); font-size: 8px;
+  letter-spacing: 3px; color: var(--dim);
+}
+#lines-list { flex: 1; overflow-y: auto; }
+
+.line-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 14px 9px 11px; cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background 0.1s;
+  user-select: none;
+}
+.line-item:hover  { background: #1a1a1a; }
+.line-item.active { background: var(--bg3); }
+.li-icon  { font-size: 13px; flex-shrink: 0; }
+.li-name  { flex: 1; font-size: 12px; color: #BBB; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.li-count { font-family: var(--mono); font-size: 10px; flex-shrink: 0; }
+
+#btn-new-line {
+  margin: 8px 10px 10px;
+  padding: 7px; background: transparent;
+  border: 1px dashed var(--border2); color: var(--dim);
+  border-radius: 3px; cursor: pointer;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1px;
+  width: calc(100% - 20px); transition: all 0.15s;
+}
+#btn-new-line:hover { border-color: #555; color: #888; }
+
+.sb-foot {
+  padding: 10px 14px 16px; border-top: 1px solid var(--border);
+  display: flex; gap: 18px;
+}
+.sf-stat { display: flex; flex-direction: column; }
+.sf-num  { font-family: var(--mono); font-size: 16px; color: var(--text); }
+.sf-lbl  { font-family: var(--mono); font-size: 8px; color: var(--dim); letter-spacing: 1px; margin-top: 1px; }
+
+/* ── COL 2: ENTRY LIST ── */
+#col-list {
+  width: 280px; flex-shrink: 0;
+  background: var(--bg2); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+}
+#list-head {
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.lh-top {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.lh-title {
+  font-family: var(--mono); font-size: 11px;
+  color: var(--gold); letter-spacing: 1px;
+  display: flex; align-items: center; gap: 6px;
+}
+.lh-badge {
+  font-size: 9px; padding: 2px 6px; border-radius: 10px;
+  font-family: var(--mono);
+}
+.lh-actions { display: flex; gap: 5px; }
+
+#search-box {
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 3px; color: #CCC; padding: 6px 10px;
+  font-size: 12px; font-family: var(--serif);
+  outline: none; width: 100%;
+  transition: border-color 0.15s;
+}
+#search-box:focus { border-color: #444; }
+
+.view-pills { display: flex; gap: 0; }
+.vpill {
+  padding: 3px 10px; background: var(--bg3);
+  border: 1px solid var(--border2); color: var(--dim);
+  cursor: pointer; font-size: 11px; font-family: var(--mono);
+  letter-spacing: 0.5px; transition: all 0.12s;
+}
+.vpill:first-child { border-radius: 3px 0 0 3px; border-right: none; }
+.vpill:last-child  { border-radius: 0 3px 3px 0; }
+.vpill.active { background: var(--gold); color: #0F0F0F; border-color: var(--gold); }
+
+#entries-scroll { flex: 1; overflow-y: auto; }
+
+.entry-row {
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background 0.1s;
+  border-left: 3px solid transparent;
+}
+.entry-row:hover  { background: #181818; }
+.entry-row.active { background: var(--bg3); border-left-color: var(--gold); }
+.er-title  { font-size: 13px; color: var(--text); margin-bottom: 3px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.er-preview{ font-size: 11px; color: var(--muted); line-height: 1.5; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.er-meta   { display: flex; align-items: center; justify-content: space-between; }
+.er-tags   { display: flex; gap: 3px; flex-wrap: wrap; }
+.er-tag    { font-size: 9px; padding: 1px 5px; border-radius: 2px; font-family: var(--mono); }
+.er-date   { font-size: 9px; color: var(--dim); font-family: var(--mono); flex-shrink: 0; }
+.er-dc     { font-size: 9px; font-family: var(--mono); margin-top: 3px; opacity: 0.6; }
+
+.draft-row {
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  cursor: pointer; opacity: 0.75; transition: background 0.1s;
+  border-left: 3px solid #333;
+}
+.draft-row:hover { background: #181818; opacity: 1; }
+.dr-title   { font-size: 12px; color: #AAA; margin-bottom: 3px; }
+.dr-preview { font-size: 11px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dr-meta    { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; }
+
+/* ── COL 3: EDITOR / VIEWER ── */
+#col-editor {
+  flex: 1; background: var(--bg); display: flex; flex-direction: column; min-width: 0;
+}
+
+/* Empty state */
+#editor-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--dim); gap: 12px;
+}
+.ee-icon { font-size: 36px; opacity: 0.2; }
+.ee-text { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; }
+.ee-hint { font-size: 12px; color: var(--dim); }
+
+/* View mode */
+#editor-view {
+  flex: 1; display: none; flex-direction: column; overflow: hidden;
+}
+#ev-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0; gap: 10px;
+}
+#ev-title-display {
+  font-size: 18px; font-weight: bold; color: var(--text);
+  flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ev-actions { display: flex; gap: 6px; align-items: center; }
+#ev-body-wrap { flex: 1; overflow-y: auto; padding: 24px; }
+#ev-body {
+  font-size: 15px; color: #CCC; line-height: 1.9;
+  white-space: pre-wrap; max-width: 720px; margin: 0 auto;
+}
+#ev-tags-row  { display: flex; gap: 5px; flex-wrap: wrap; padding: 0 24px 16px; max-width: 768px; }
+#ev-date-row  { padding: 0 24px 16px; font-family: var(--mono); font-size: 10px; color: var(--dim); }
+
+/* Drafts panel inside view */
+#ev-drafts {
+  border-top: 1px solid var(--border); padding: 16px 24px;
+  background: var(--bg2); flex-shrink: 0; max-height: 240px; overflow-y: auto;
+}
+.evd-head {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 2px;
+  color: var(--dim); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.evd-item {
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-left: 2px solid #444; border-radius: 3px;
+  padding: 9px 11px; margin-bottom: 7px;
+}
+.evd-title { font-size: 11px; color: #AAA; margin-bottom: 3px; }
+.evd-body  { font-size: 12px; color: var(--muted); line-height: 1.6; white-space: pre-wrap; }
+.evd-meta  { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; }
+
+/* Edit mode */
+#editor-edit {
+  flex: 1; display: none; flex-direction: column; overflow: hidden;
+}
+#ee-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 24px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.ee-topbar-l { font-family: var(--mono); font-size: 10px; color: var(--dim); letter-spacing: 2px; }
+.ee-topbar-r { display: flex; gap: 6px; }
+
+#ee-title {
+  background: transparent; border: none; outline: none;
+  color: var(--text); font-family: var(--serif); font-size: 22px; font-weight: bold;
+  padding: 20px 24px 10px; width: 100%;
+}
+#ee-title::placeholder { color: var(--dim); }
+
+#ee-tag-area {
+  padding: 0 24px 10px; display: flex; align-items: center;
+  gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--border);
+}
+.ee-tag {
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: #AAA; padding: 2px 8px; border-radius: 3px;
+  font-family: var(--mono); font-size: 10px;
+  display: flex; align-items: center; gap: 4px;
+}
+.ee-tag-x { cursor: pointer; color: var(--dim); font-size: 9px; }
+.ee-tag-x:hover { color: #c44; }
+#ee-tag-input {
+  background: transparent; border: 1px dashed var(--border2);
+  border-radius: 3px; color: #AAA; padding: 2px 7px;
+  font-family: var(--mono); font-size: 10px; outline: none; width: 100px;
+}
+#ee-tag-input::placeholder { color: var(--dim); }
+
+#ee-body {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: #D0CBBA; font-family: var(--serif); font-size: 15px;
+  line-height: 1.9; padding: 18px 24px; resize: none;
+  max-width: 760px; width: 100%;
+}
+#ee-body::placeholder { color: var(--dim); }
+#ee-statusbar {
+  padding: 6px 24px; border-top: 1px solid var(--border);
+  font-family: var(--mono); font-size: 9px; color: var(--dim);
+  display: flex; justify-content: space-between;
+  flex-shrink: 0;
+}
+
+/* ── BUTTONS ── */
+.btn-p {
+  background: var(--gold); color: #0F0F0F;
+  border: none; border-radius: 3px; padding: 6px 14px;
+  cursor: pointer; font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.5px; transition: background 0.15s;
+}
+.btn-p:hover { background: #d4b87a; }
+.btn-g {
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; font-size: 11px; padding: 5px 8px;
+  font-family: var(--serif); transition: color 0.12s;
+}
+.btn-g:hover { color: var(--text); }
+.btn-o {
+  background: none; border: 1px solid var(--border2); border-radius: 3px;
+  color: var(--muted); cursor: pointer; font-size: 11px;
+  padding: 5px 10px; font-family: var(--mono); font-size: 10px;
+  transition: all 0.12s;
+}
+.btn-o:hover { border-color: #555; color: var(--text); }
+.btn-del {
+  background: none; border: none; color: var(--dim);
+  cursor: pointer; font-size: 11px; padding: 5px 8px;
+  transition: color 0.12s;
+}
+.btn-del:hover { color: #c44; }
+
+/* ── MODAL ── */
+#overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8); z-index: 500;
+  align-items: center; justify-content: center; padding: 20px;
+}
+#overlay.open { display: flex; }
+#mbox {
+  background: #181818; border: 1px solid #333; border-radius: 6px;
+  padding: 24px 22px 20px; width: 100%; max-width: 480px;
+  max-height: 88vh; overflow-y: auto;
+  animation: mopen 0.18s ease;
+}
+@keyframes mopen { from{opacity:0;transform:scale(0.97)} to{opacity:1;transform:scale(1)} }
+.m-title { font-size: 15px; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 16px; }
+.m-lbl   { font-family: var(--mono); font-size: 8px; letter-spacing: 2px; color: var(--dim); display: block; margin-bottom: 5px; }
+.m-in    { width: 100%; background: #111; border: 1px solid #333; border-radius: 3px; color: var(--text); padding: 7px 10px; font-size: 13px; margin-bottom: 13px; font-family: var(--serif); outline: none; display: block; }
+.m-ta    { min-height: 110px; resize: vertical; line-height: 1.7; }
+.m-act   { display: flex; justify-content: flex-end; gap: 7px; margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--border); }
+.icon-grid { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 13px; }
+.ico-b  { background: #222; border: 1px solid #333; border-radius: 3px; padding: 5px 8px; cursor: pointer; font-size: 14px; }
+.ico-b.sel { border-color: var(--gold); background: #2A2A1A; }
+.clr-grid { display: flex; gap: 6px; margin-bottom: 13px; flex-wrap: wrap; }
+.clr-b  { width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+.clr-b.sel { border-color: #fff; }
+
+/* LOADING */
+#loading {
+  position: fixed; inset: 0; background: var(--bg); z-index: 999;
+  display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px;
+}
+.ld-ring {
+  width: 28px; height: 28px; border: 2px solid var(--border2);
+  border-top-color: var(--gold); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.ld-txt { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 3px; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="ld-ring"></div>
+  <div class="ld-txt">ПОДКЛЮЧЕНИЕ</div>
+</div>
+
+<div id="app">
+
+  <!-- ══ COL 1: SIDEBAR ══ -->
+  <aside id="sidebar">
+    <div class="sb-head">
+      <div class="sb-logo">БЛОКНОТ <span class="sync-dot" id="sync-dot"></span></div>
+      <div class="sb-sub">стратегический</div>
+    </div>
+    <div class="sb-section">ЛИНИИ</div>
+    <div id="lines-list"></div>
+    <button id="btn-new-line" onclick="openNewLineModal()">+ новая линия</button>
+    <div class="sb-foot">
+      <div class="sf-stat"><span class="sf-num" id="stat-e">0</span><span class="sf-lbl">записей</span></div>
+      <div class="sf-stat"><span class="sf-num" id="stat-d">0</span><span class="sf-lbl">черновиков</span></div>
+    </div>
+  </aside>
+
+  <!-- ══ COL 2: LIST ══ -->
+  <div id="col-list">
+    <div id="list-head">
+      <div class="lh-top">
+        <div class="lh-title" id="lh-title">—</div>
+        <div class="lh-actions">
+          <div class="view-pills">
+            <button class="vpill active" id="pill-e" onclick="setView('entries')">записи</button>
+            <button class="vpill" id="pill-d" onclick="setView('drafts')">черновики</button>
+          </div>
+        </div>
+      </div>
+      <input id="search-box" type="search" placeholder="поиск по записям..." oninput="renderList()">
+    </div>
+    <div id="entries-scroll"></div>
+  </div>
+
+  <!-- ══ COL 3: EDITOR ══ -->
+  <div id="col-editor">
+
+    <!-- EMPTY -->
+    <div id="editor-empty" style="display:flex">
+      <div class="ee-icon">✦</div>
+      <div class="ee-text">БЛОКНОТ</div>
+      <div class="ee-hint">Выбери запись или создай новую</div>
+    </div>
+
+    <!-- VIEW -->
+    <div id="editor-view">
+      <div id="ev-topbar">
+        <div id="ev-title-display"></div>
+        <div class="ev-actions">
+          <button class="btn-o" onclick="openDraftModal()">+ черновик</button>
+          <button class="btn-o" onclick="enterEditMode()">Редактировать</button>
+          <button class="btn-del" onclick="confirmDelEntry()">Удалить</button>
+        </div>
+      </div>
+      <div id="ev-tags-row"></div>
+      <div id="ev-date-row"></div>
+      <div id="ev-body-wrap"><div id="ev-body"></div></div>
+      <div id="ev-drafts">
+        <div class="evd-head">ЧЕРНОВИКИ <button class="btn-g" style="font-size:10px;font-family:var(--mono)" onclick="openDraftModal()">+ добавить</button></div>
+        <div id="ev-drafts-list"></div>
+      </div>
+    </div>
+
+    <!-- EDIT -->
+    <div id="editor-edit">
+      <div id="ee-topbar">
+        <div class="ee-topbar-l" id="ee-mode-label">НОВАЯ ЗАПИСЬ</div>
+        <div class="ee-topbar-r">
+          <button class="btn-g" onclick="cancelEdit()">Отмена</button>
+          <button class="btn-p" onclick="saveEntry()">Сохранить</button>
+        </div>
+      </div>
+      <input id="ee-title" type="text" placeholder="Заголовок записи...">
+      <div id="ee-tag-area">
+        <input id="ee-tag-input" placeholder="+ тег" onkeydown="handleTagKey(event)">
+      </div>
+      <textarea id="ee-body" placeholder="Идея, план, анализ, детали...&#10;&#10;Пиши свободно."></textarea>
+      <div id="ee-statusbar">
+        <span id="ee-wc">0 слов</span>
+        <span id="ee-saved"></span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="overlay" onclick="handleBgClick(event)">
+  <div id="mbox"></div>
+</div>
+
+<script type="module">
+import { initializeApp }    from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+import { getFirestore, collection, doc, onSnapshot,
+         setDoc, deleteDoc, serverTimestamp }
+                             from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+// ─── FIREBASE ────────────────────────────────────────────────────
+const app = initializeApp({
+  apiKey:            "AIzaSyC8q_pr3kIOlb9UEKbxhAuKu9vz6vfQosw",
+  authDomain:        "project-id-6ca36.firebaseapp.com",
+  projectId:         "project-id-6ca36",
+  storageBucket:     "project-id-6ca36.firebasestorage.app",
+  messagingSenderId: "57707102531",
+  appId:             "1:57707102531:web:5c279fb59d7b46c90baff6"
+});
+const db = getFirestore(app);
+
+// ─── STATE ───────────────────────────────────────────────────────
+let lines        = [];
+let entries      = {};           // lineId → [entry]
+let activeLineId = null;
+let activeEntryId= null;
+let currentView  = 'entries';    // entries | drafts
+let editMode     = false;        // true = edit panel visible
+let isNew        = false;        // creating new entry
+let _eTags       = [];
+let _nlIcon = '💡', _nlColor = '#C8A96E';
+
+const ICONS  = ['💡','✈','🏦','☕','🏭','🌐','🚀','📦','🏗','💎','🎯','📊','🔑','🛢','📋','🧭','🏠','⚡'];
+const COLORS = ['#C8A96E','#7EB8A4','#E07B7B','#7BA7E0','#B07BE0','#E0B47B','#7BE0C8','#E07BB8','#A0E07B','#E0D47B'];
+
+// ─── UTILS ───────────────────────────────────────────────────────
+const genId = () => 'id' + Date.now() + Math.random().toString(36).slice(2,6);
+const esc   = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmt   = ts => {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+};
+const activeLine  = () => lines.find(l => l.id === activeLineId);
+const lineEntries = () => (entries[activeLineId]||[]).slice().sort((a,b)=>(b.updatedAt?.seconds||0)-(a.updatedAt?.seconds||0));
+const activeEntry = () => lineEntries().find(e => e.id === activeEntryId);
+const wc = s => (s||'').trim().split(/\s+/).filter(Boolean).length;
+
+function syncDot(state) {
+  const d = document.getElementById('sync-dot');
+  d.className = 'sync-dot' + (state==='syncing'?' syncing':state==='error'?' error':'');
+}
+
+// ─── FIREBASE LISTENERS ──────────────────────────────────────────
+onSnapshot(collection(db,'lines'), snap => {
+  lines = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
+  if (!activeLineId && lines.length) activeLineId = lines[0].id;
+  if (activeLineId && !lines.find(l=>l.id===activeLineId)) activeLineId = lines[0]?.id||null;
+  renderSidebar(); renderList();
+});
+
+onSnapshot(collection(db,'entries'), snap => {
+  entries = {};
+  snap.docs.forEach(d => {
+    const e = {id:d.id,...d.data()};
+    if (!entries[e.lineId]) entries[e.lineId]=[];
+    entries[e.lineId].push(e);
+  });
+  renderSidebar(); renderList();
+  if (activeEntryId) refreshViewPanel();
+  document.getElementById('loading').style.display = 'none';
+  syncDot('ok');
+}, () => { syncDot('error'); document.getElementById('loading').style.display='none'; });
+
+// ─── FIREBASE WRITES ─────────────────────────────────────────────
+async function saveLine(id, data) { syncDot('syncing'); await setDoc(doc(db,'lines',id), data, {merge:true}); }
+async function saveEntryDoc(id, data) { syncDot('syncing'); await setDoc(doc(db,'entries',id), data, {merge:true}); }
+async function delEntryDoc(id) { syncDot('syncing'); await deleteDoc(doc(db,'entries',id)); }
+async function delLineDoc(id) {
+  syncDot('syncing');
+  (entries[id]||[]).forEach(e => deleteDoc(doc(db,'entries',e.id)));
+  await deleteDoc(doc(db,'lines',id));
+}
+
+// ─── RENDER SIDEBAR ──────────────────────────────────────────────
+function renderSidebar() {
+  document.getElementById('lines-list').innerHTML = lines.map(l=>`
+    <div class="line-item ${l.id===activeLineId?'active':''}" style="border-left-color:${l.color}" onclick="selectLine('${l.id}')">
+      <span class="li-icon">${l.icon}</span>
+      <span class="li-name">${esc(l.name)}</span>
+      <span class="li-count" style="color:${l.color}">${(entries[l.id]||[]).length}</span>
+    </div>`).join('');
+  const te = lines.reduce((a,l)=>a+(entries[l.id]||[]).length,0);
+  const td = lines.reduce((a,l)=>a+(entries[l.id]||[]).reduce((b,e)=>b+(e.drafts?.length||0),0),0);
+  document.getElementById('stat-e').textContent = te;
+  document.getElementById('stat-d').textContent = td;
+}
+
+// ─── RENDER LIST (COL 2) ─────────────────────────────────────────
+function renderList() {
+  const line = activeLine();
+  const scroll = document.getElementById('entries-scroll');
+  const lhTitle = document.getElementById('lh-title');
+
+  if (!line) { scroll.innerHTML=''; lhTitle.textContent='—'; return; }
+
+  lhTitle.innerHTML = `<span style="color:${line.color}">${line.icon}</span> ${esc(line.name)}`;
+
+  document.getElementById('pill-e').className = 'vpill'+(currentView==='entries'?' active':'');
+  document.getElementById('pill-d').className = 'vpill'+(currentView==='drafts'?' active':'');
+
+  const q = (document.getElementById('search-box').value||'').toLowerCase();
+
+  if (currentView==='entries') {
+    let list = lineEntries().filter(e=>{
+      if(!q) return true;
+      return (e.title||'').toLowerCase().includes(q)||(e.body||'').toLowerCase().includes(q)||(e.tags||[]).some(t=>t.toLowerCase().includes(q));
+    });
+    if (!list.length) {
+      scroll.innerHTML = `<div style="padding:30px 14px;text-align:center;color:var(--dim);font-size:12px">${q?'Ничего не найдено':'Нет записей'}</div>`;
+      return;
+    }
+    scroll.innerHTML = list.map(e=>{
+      const tags = (e.tags||[]).map(t=>`<span class="er-tag" style="background:${line.color}20;color:${line.color}">${esc(t)}</span>`).join('');
+      const dc   = e.drafts?.length||0;
+      return `<div class="entry-row ${e.id===activeEntryId?'active':''}" onclick="selectEntry('${e.id}')">
+        <div class="er-title">${esc(e.title||'Без названия')}</div>
+        <div class="er-preview">${esc(e.body||'')}</div>
+        <div class="er-meta"><div class="er-tags">${tags}</div><div class="er-date">${fmt(e.updatedAt)}</div></div>
+        ${dc?`<div class="er-dc" style="color:${line.color}">${dc} черн.</div>`:''}
+      </div>`;
+    }).join('');
+  } else {
+    const allDrafts = [];
+    lineEntries().forEach(e=>(e.drafts||[]).forEach(d=>allDrafts.push({...d,entryId:e.id,entryTitle:e.title})));
+    if (!allDrafts.length) {
+      scroll.innerHTML = `<div style="padding:30px 14px;text-align:center;color:var(--dim);font-size:12px">Нет черновиков</div>`;
+      return;
+    }
+    scroll.innerHTML = allDrafts.map(d=>`
+      <div class="draft-row">
+        <div class="dr-title">${esc(d.title||'Черновик')}</div>
+        <div class="dr-preview">${esc(d.body||'')}</div>
+        <div class="dr-meta">
+          <span style="font-size:9px;color:var(--dim);font-family:var(--mono)">→ ${esc(d.entryTitle||'?')}</span>
+          <button class="btn-del" style="font-size:10px" onclick="deleteDraft('${d.entryId}','${d.id}')">удалить</button>
+        </div>
+      </div>`).join('');
+  }
+}
+
+// ─── PANEL LOGIC ─────────────────────────────────────────────────
+function showPanel(which) {
+  document.getElementById('editor-empty').style.display = which==='empty'  ? 'flex' : 'none';
+  document.getElementById('editor-view' ).style.display = which==='view'   ? 'flex' : 'none';
+  document.getElementById('editor-edit' ).style.display = which==='edit'   ? 'flex' : 'none';
+}
+
+function refreshViewPanel() {
+  const line  = activeLine();
+  const entry = activeEntry();
+  if (!entry||!line) { showPanel('empty'); return; }
+
+  document.getElementById('ev-title-display').textContent = entry.title||'Без названия';
+  document.getElementById('ev-body').textContent = entry.body||'';
+  document.getElementById('ev-date-row').textContent = 'Обновлено: ' + fmt(entry.updatedAt);
+
+  const tagsRow = document.getElementById('ev-tags-row');
+  tagsRow.innerHTML = (entry.tags||[]).map(t=>
+    `<span class="er-tag" style="background:${line.color}20;color:${line.color};font-size:10px;padding:2px 7px">${esc(t)}</span>`
+  ).join('');
+
+  const dl = document.getElementById('ev-drafts-list');
+  const drafts = entry.drafts||[];
+  dl.innerHTML = drafts.length===0
+    ? `<div style="color:var(--dim);font-size:11px">Нет черновиков. Сохраняй сырые идеи и отрывки сюда.</div>`
+    : drafts.map(d=>`
+      <div class="evd-item">
+        <div class="evd-title">${esc(d.title||'Отрывок')}</div>
+        <div class="evd-body">${esc(d.body||'')}</div>
+        <div class="evd-meta">
+          <span style="font-size:9px;color:var(--dim);font-family:var(--mono)">${fmt(d.createdAt)}</span>
+          <button class="btn-del" style="font-size:10px" onclick="deleteDraft('${entry.id}','${d.id}')">удалить</button>
+        </div>
+      </div>`).join('');
+
+  showPanel('view');
+}
+
+function enterEditMode(fresh=false) {
+  const entry = fresh ? null : activeEntry();
+  isNew  = !entry;
+  _eTags = entry ? [...(entry.tags||[])] : [];
+
+  document.getElementById('ee-mode-label').textContent = isNew ? 'НОВАЯ ЗАПИСЬ' : 'РЕДАКТИРОВАТЬ';
+  document.getElementById('ee-title').value = entry?.title||'';
+  document.getElementById('ee-body').value  = entry?.body||'';
+  renderEditTags();
+  updateWC();
+  showPanel('edit');
+  setTimeout(()=>document.getElementById(isNew?'ee-title':'ee-body').focus(), 60);
+}
+
+function renderEditTags() {
+  const area = document.getElementById('ee-tag-area');
+  const inp  = document.getElementById('ee-tag-input');
+  area.innerHTML='';
+  _eTags.forEach(t=>{
+    const s = document.createElement('span');
+    s.className='ee-tag';
+    s.innerHTML=`${esc(t)}<span class="ee-tag-x" onclick="removeTag('${esc(t)}')">✕</span>`;
+    area.appendChild(s);
+  });
+  area.appendChild(inp);
+}
+
+function updateWC() {
+  const w = wc(document.getElementById('ee-body').value);
+  document.getElementById('ee-wc').textContent = w + ' ' + (w===1?'слово':w<5?'слова':'слов');
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────
+window.selectLine = function(id) {
+  activeLineId  = id;
+  activeEntryId = null;
+  currentView   = 'entries';
+  document.getElementById('search-box').value = '';
+  renderSidebar(); renderList(); showPanel('empty');
+};
+window.setView = function(v) { currentView=v; renderList(); };
+window.selectEntry = function(id) {
+  activeEntryId = id;
+  renderList();
+  refreshViewPanel();
+};
+window.cancelEdit = function() {
+  if (isNew) { showPanel('empty'); activeEntryId=null; renderList(); }
+  else        refreshViewPanel();
+};
+window.enterEditMode = () => enterEditMode(false);
+
+window.handleTagKey = function(e) {
+  if (e.key==='Enter'||e.key===',') { e.preventDefault(); addTag(); }
+};
+window.addTag = function() {
+  const inp = document.getElementById('ee-tag-input');
+  const v   = (inp.value||'').replace(/,/g,'').trim();
+  if (v && !_eTags.includes(v)) _eTags.push(v);
+  inp.value='';
+  renderEditTags();
+};
+window.removeTag = function(t) { _eTags=_eTags.filter(x=>x!==t); renderEditTags(); };
+
+document.getElementById('ee-body').addEventListener('input', updateWC);
+
+window.saveEntry = async function() {
+  const title = document.getElementById('ee-title').value||'';
+  const body  = document.getElementById('ee-body').value||'';
+  const line  = activeLine();
+  if (!line) return;
+  document.getElementById('ee-saved').textContent = 'сохранение...';
+  if (isNew) {
+    const id = genId();
+    await saveEntryDoc(id, { lineId:activeLineId, title, body, tags:[..._eTags], drafts:[], createdAt:serverTimestamp(), updatedAt:serverTimestamp() });
+    activeEntryId = id;
+  } else {
+    await saveEntryDoc(activeEntryId, { title, body, tags:[..._eTags], updatedAt:serverTimestamp() });
+  }
+  document.getElementById('ee-saved').textContent = 'сохранено ✓';
+  setTimeout(()=>{ document.getElementById('ee-saved').textContent=''; refreshViewPanel(); },800);
+};
+
+window.confirmDelEntry = async function() {
+  const e = activeEntry();
+  if (!e) return;
+  if (!confirm(`Удалить "${e.title||'эту запись'}"?`)) return;
+  await delEntryDoc(e.id);
+  activeEntryId = null;
+  showPanel('empty');
+};
+
+window.deleteDraft = async function(entryId, draftId) {
+  const e = lineEntries().find(x=>x.id===entryId);
+  if (!e) return;
+  const drafts = (e.drafts||[]).filter(d=>d.id!==draftId);
+  await saveEntryDoc(entryId, {drafts});
+};
+
+window.confirmDelLine = async function() {
+  const line = activeLine();
+  if (!line) return;
+  if (!confirm(`Удалить линию "${line.name}" и все её записи?`)) return;
+  await delLineDoc(line.id);
+  activeLineId = lines.find(l=>l.id!==line.id)?.id||null;
+  activeEntryId = null;
+  showPanel('empty');
+};
+
+// new entry button in header
+window.openNewEntry = function() { enterEditMode(true); };
+
+// ─── NEW LINE MODAL ──────────────────────────────────────────────
+window.openNewLineModal = function() { _nlIcon=ICONS[0]; _nlColor=COLORS[0]; renderNLModal(); };
+function renderNLModal() {
+  const v = document.getElementById('nl-name')?.value||'';
+  openModal(`
+    <div class="m-title">Новая линия</div>
+    <label class="m-lbl">НАЗВАНИЕ</label>
+    <input class="m-in" id="nl-name" placeholder="Например: KUE" value="${esc(v)}" autofocus>
+    <label class="m-lbl">ИКОНКА</label>
+    <div class="icon-grid">${ICONS.map(i=>`<button class="ico-b ${i===_nlIcon?'sel':''}" onclick="pickIcon('${i}')">${i}</button>`).join('')}</div>
+    <label class="m-lbl">ЦВЕТ</label>
+    <div class="clr-grid">${COLORS.map(c=>`<button class="clr-b ${c===_nlColor?'sel':''}" style="background:${c}" onclick="pickClr('${c}')"></button>`).join('')}</div>
+    <div class="m-act">
+      <button class="btn-g" onclick="closeModal()">Отмена</button>
+      <button class="btn-p" onclick="submitNewLine()">Создать</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('nl-name')?.focus(),50);
+}
+window.pickIcon = i => { _nlIcon=i; renderNLModal(); };
+window.pickClr  = c => { _nlColor=c; renderNLModal(); };
+window.submitNewLine = async function() {
+  const name = (document.getElementById('nl-name').value||'').trim();
+  if (!name) return;
+  await saveLine(genId(), {name, icon:_nlIcon, color:_nlColor, order:lines.length});
+  closeModal();
+};
+
+// ─── DRAFT MODAL ─────────────────────────────────────────────────
+window.openDraftModal = function() {
+  const e = activeEntry();
+  if (!e) return;
+  openModal(`
+    <div class="m-title">Новый черновик</div>
+    <label class="m-lbl">НАЗВАНИЕ (необязательно)</label>
+    <input class="m-in" id="dr-t" placeholder="Отрывок, набросок...">
+    <label class="m-lbl">ТЕКСТ</label>
+    <textarea class="m-in m-ta" id="dr-b" placeholder="Сырая идея, вопрос, фрагмент мысли..."></textarea>
+    <div class="m-act">
+      <button class="btn-g" onclick="closeModal()">Отмена</button>
+      <button class="btn-p" onclick="submitDraft('${e.id}')">Сохранить черновик</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('dr-b')?.focus(),50);
+};
+window.submitDraft = async function(entryId) {
+  const e = lineEntries().find(x=>x.id===entryId);
+  if (!e) return;
+  const title = document.getElementById('dr-t').value||'';
+  const body  = document.getElementById('dr-b').value||'';
+  const drafts = [...(e.drafts||[]), {id:genId(), title, body, createdAt:Date.now()}];
+  await saveEntryDoc(entryId, {drafts});
+  closeModal();
+};
+
+// ─── MODAL ───────────────────────────────────────────────────────
+function openModal(html) { document.getElementById('mbox').innerHTML=html; document.getElementById('overlay').classList.add('open'); }
+window.closeModal = () => document.getElementById('overlay').classList.remove('open');
+window.handleBgClick = e => { if(e.target===document.getElementById('overlay')) closeModal(); };
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') { closeModal(); }
+  if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); if(document.getElementById('editor-edit').style.display!=='none') window.saveEntry(); }
+  if ((e.ctrlKey||e.metaKey) && e.key==='n') { e.preventDefault(); window.openNewEntry(); }
+});
+
+// ─── KEYBOARD SHORTCUTS HINT ─────────────────────────────────────
+// Ctrl+S = save, Ctrl+N = new entry, Esc = cancel/close
+
+// ─── TOP BAR BUTTONS ─────────────────────────────────────────────
+// Inject buttons into list header
+document.getElementById('lh-actions-extra') && null; // handled inline
+
+// Add "new entry" and "del line" to list header after render
+const listHead = document.getElementById('list-head');
+const extraRow = document.createElement('div');
+extraRow.style = 'display:flex;gap:5px;justify-content:space-between;align-items:center;';
+extraRow.innerHTML = `
+  <button class="btn-p" style="font-size:10px;padding:5px 12px" onclick="openNewEntry()">+ запись</button>
+  <button class="btn-del" style="font-size:10px" onclick="confirmDelLine()">удалить линию</button>`;
+listHead.appendChild(extraRow);
+</script>
+</body>
+</html>
