@@ -348,6 +348,61 @@ html, body {
 @keyframes spin { to { transform: rotate(360deg); } }
 .ld-txt { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 3px; }
 
+/* ── AUTH SCREEN ── */
+#auth-screen {
+  position: fixed; inset: 0; background: var(--bg); z-index: 1000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+#auth-box {
+  width: 100%; max-width: 380px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 32px 28px 24px;
+  animation: mopen 0.18s ease;
+}
+.auth-logo {
+  text-align: center; margin-bottom: 24px;
+}
+.auth-logo .al-icon { font-size: 28px; margin-bottom: 6px; }
+.auth-logo .al-name {
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 6px; color: var(--gold);
+}
+.auth-logo .al-sub {
+  font-family: var(--mono); font-size: 8px;
+  color: var(--dim); letter-spacing: 2px; margin-top: 4px;
+}
+#auth-error {
+  background: #2a1515; border: 1px solid #4a2222;
+  border-radius: 3px; color: #d47373; font-size: 11px;
+  padding: 8px 10px; margin-bottom: 14px; display: none;
+  font-family: var(--sans);
+}
+#auth-email, #auth-password {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 3px; color: var(--text); padding: 9px 11px;
+  font-size: 13px; font-family: var(--serif); outline: none;
+  margin-bottom: 12px; transition: border-color 0.15s;
+}
+#auth-email:focus, #auth-password:focus { border-color: var(--gold); }
+#auth-submit {
+  width: 100%; background: var(--gold); color: #0F0F0F;
+  border: none; border-radius: 3px; padding: 10px;
+  cursor: pointer; font-family: var(--mono); font-size: 11px;
+  letter-spacing: 1px; margin-top: 4px; margin-bottom: 14px;
+  transition: background 0.15s;
+}
+#auth-submit:hover { background: #d4b87a; }
+#auth-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.auth-toggle {
+  text-align: center; font-size: 12px; color: var(--muted);
+  font-family: var(--sans);
+}
+.auth-toggle a {
+  color: var(--gold); cursor: pointer; text-decoration: none;
+  margin-left: 4px; transition: color 0.12s;
+}
+.auth-toggle a:hover { color: #d4b87a; }
+
 /* SCROLLBAR */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -360,6 +415,24 @@ html, body {
 <div id="loading">
   <div class="ld-ring"></div>
   <div class="ld-txt">ПОДКЛЮЧЕНИЕ</div>
+</div>
+
+<!-- ── AUTH SCREEN ── -->
+<div id="auth-screen" style="display:none">
+  <div id="auth-box">
+    <div class="auth-logo">
+      <div class="al-icon">✦</div>
+      <div class="al-name">БЛОКНОТ</div>
+      <div class="al-sub">стратегический</div>
+    </div>
+    <div id="auth-error"></div>
+    <input id="auth-email" type="email" placeholder="Email" autocomplete="email">
+    <input id="auth-password" type="password" placeholder="Пароль" autocomplete="current-password">
+    <button id="auth-submit" onclick="handleAuthSubmit()">Войти</button>
+    <div class="auth-toggle" id="auth-toggle">
+      Нет аккаунта? <a id="auth-toggle-link" onclick="toggleAuthMode()">Зарегистрироваться</a>
+    </div>
+  </div>
 </div>
 
 <div id="app">
@@ -377,6 +450,7 @@ html, body {
       <div class="sf-stat"><span class="sf-num" id="stat-e">0</span><span class="sf-lbl">записей</span></div>
       <div class="sf-stat"><span class="sf-num" id="stat-d">0</span><span class="sf-lbl">черновиков</span></div>
     </div>
+    <button class="btn-o" style="margin:8px 10px 12px;font-size:9px;text-align:center;width:calc(100% - 20px)" onclick="handleLogout()">Выйти</button>
   </aside>
 
   <!-- ══ COL 2: LIST ══ -->
@@ -458,6 +532,9 @@ import { initializeApp }    from "https://www.gstatic.com/firebasejs/12.15.0/fir
 import { getFirestore, collection, doc, onSnapshot,
          setDoc, deleteDoc, serverTimestamp }
                              from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged,
+         signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut }
+                             from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
 
 // ─── FIREBASE ────────────────────────────────────────────────────
 const app = initializeApp({
@@ -469,6 +546,13 @@ const app = initializeApp({
   appId:             "1:57707102531:web:5c279fb59d7b46c90baff6"
 });
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+// ─── AUTH STATE ──────────────────────────────────────────────────
+let currentUser = null;
+let authMode = 'login'; // 'login' | 'register'
+let unsubLines = null;
+let unsubEntries = null;
 
 // ─── STATE ───────────────────────────────────────────────────────
 let lines        = [];
@@ -503,34 +587,50 @@ function syncDot(state) {
 }
 
 // ─── FIREBASE LISTENERS ──────────────────────────────────────────
-onSnapshot(collection(db,'lines'), snap => {
-  lines = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
-  if (!activeLineId && lines.length) activeLineId = lines[0].id;
-  if (activeLineId && !lines.find(l=>l.id===activeLineId)) activeLineId = lines[0]?.id||null;
-  renderSidebar(); renderList();
-});
+function startFirestoreListeners(uid) {
+  if (unsubLines) unsubLines();
+  if (unsubEntries) unsubEntries();
 
-onSnapshot(collection(db,'entries'), snap => {
-  entries = {};
-  snap.docs.forEach(d => {
-    const e = {id:d.id,...d.data()};
-    if (!entries[e.lineId]) entries[e.lineId]=[];
-    entries[e.lineId].push(e);
+  unsubLines = onSnapshot(collection(db,'users',uid,'lines'), snap => {
+    lines = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
+    if (!activeLineId && lines.length) activeLineId = lines[0].id;
+    if (activeLineId && !lines.find(l=>l.id===activeLineId)) activeLineId = lines[0]?.id||null;
+    renderSidebar(); renderList();
   });
-  renderSidebar(); renderList();
-  if (activeEntryId) refreshViewPanel();
-  document.getElementById('loading').style.display = 'none';
-  syncDot('ok');
-}, () => { syncDot('error'); document.getElementById('loading').style.display='none'; });
+
+  unsubEntries = onSnapshot(collection(db,'users',uid,'entries'), snap => {
+    entries = {};
+    snap.docs.forEach(d => {
+      const e = {id:d.id,...d.data()};
+      if (!entries[e.lineId]) entries[e.lineId]=[];
+      entries[e.lineId].push(e);
+    });
+    renderSidebar(); renderList();
+    if (activeEntryId) refreshViewPanel();
+    document.getElementById('loading').style.display = 'none';
+    syncDot('ok');
+  }, () => { syncDot('error'); document.getElementById('loading').style.display='none'; });
+}
+
+function stopFirestoreListeners() {
+  if (unsubLines) { unsubLines(); unsubLines = null; }
+  if (unsubEntries) { unsubEntries(); unsubEntries = null; }
+  lines = [];
+  entries = {};
+  activeLineId = null;
+  activeEntryId = null;
+}
+
+function uid() { return currentUser?.uid; }
 
 // ─── FIREBASE WRITES ─────────────────────────────────────────────
-async function saveLine(id, data) { syncDot('syncing'); await setDoc(doc(db,'lines',id), data, {merge:true}); }
-async function saveEntryDoc(id, data) { syncDot('syncing'); await setDoc(doc(db,'entries',id), data, {merge:true}); }
-async function delEntryDoc(id) { syncDot('syncing'); await deleteDoc(doc(db,'entries',id)); }
+async function saveLine(id, data) { syncDot('syncing'); await setDoc(doc(db,'users',uid(),'lines',id), data, {merge:true}); }
+async function saveEntryDoc(id, data) { syncDot('syncing'); await setDoc(doc(db,'users',uid(),'entries',id), data, {merge:true}); }
+async function delEntryDoc(id) { syncDot('syncing'); await deleteDoc(doc(db,'users',uid(),'entries',id)); }
 async function delLineDoc(id) {
   syncDot('syncing');
-  (entries[id]||[]).forEach(e => deleteDoc(doc(db,'entries',e.id)));
-  await deleteDoc(doc(db,'lines',id));
+  (entries[id]||[]).forEach(e => deleteDoc(doc(db,'users',uid(),'entries',e.id)));
+  await deleteDoc(doc(db,'users',uid(),'lines',id));
 }
 
 // ─── RENDER SIDEBAR ──────────────────────────────────────────────
@@ -828,6 +928,88 @@ extraRow.innerHTML = `
   <button class="btn-p" style="font-size:10px;padding:5px 12px" onclick="openNewEntry()">+ запись</button>
   <button class="btn-del" style="font-size:10px" onclick="confirmDelLine()">удалить линию</button>`;
 listHead.appendChild(extraRow);
+
+// ─── AUTH LOGIC ──────────────────────────────────────────────────
+window.toggleAuthMode = function() {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  document.getElementById('auth-submit').textContent = authMode === 'login' ? 'Войти' : 'Зарегистрироваться';
+  document.getElementById('auth-toggle').innerHTML = authMode === 'login'
+    ? 'Нет аккаунта? <a id="auth-toggle-link" onclick="toggleAuthMode()">Зарегистрироваться</a>'
+    : 'Уже есть аккаунт? <a id="auth-toggle-link" onclick="toggleAuthMode()">Войти</a>';
+  document.getElementById('auth-error').style.display = 'none';
+};
+
+window.handleAuthSubmit = async function() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errorEl = document.getElementById('auth-error');
+  const submitBtn = document.getElementById('auth-submit');
+
+  if (!email || !password) {
+    errorEl.textContent = 'Введите email и пароль';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  errorEl.style.display = 'none';
+  submitBtn.disabled = true;
+  submitBtn.textContent = authMode === 'login' ? 'Вход...' : 'Регистрация...';
+
+  try {
+    if (authMode === 'login') {
+      await signInWithEmailAndPassword(auth, email, password);
+    } else {
+      await createUserWithEmailAndPassword(auth, email, password);
+    }
+  } catch (err) {
+    errorEl.textContent = err.message.replace('Firebase: ', '').replace(/\(auth\/.*\)/, '').trim();
+    errorEl.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.textContent = authMode === 'login' ? 'Войти' : 'Зарегистрироваться';
+  }
+};
+
+window.handleLogout = async function() {
+  await signOut(auth);
+};
+
+// Enter key on auth form
+document.getElementById('auth-password').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); handleAuthSubmit(); }
+});
+
+// ═══════════════════════════════════════════════
+//    AUTH STATE WATCHER – entry point
+// ═══════════════════════════════════════════════
+onAuthStateChanged(auth, user => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('loading').style.display = 'flex';
+    activeLineId = null;
+    activeEntryId = null;
+    startFirestoreListeners(user.uid);
+  } else {
+    currentUser = null;
+    stopFirestoreListeners();
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('loading').style.display = 'none';
+    // reset auth form
+    document.getElementById('auth-email').value = '';
+    document.getElementById('auth-password').value = '';
+    document.getElementById('auth-error').style.display = 'none';
+    document.getElementById('auth-submit').disabled = false;
+    document.getElementById('auth-submit').textContent = 'Войти';
+    authMode = 'login';
+    document.getElementById('auth-toggle').innerHTML = 'Нет аккаунта? <a id="auth-toggle-link" onclick="toggleAuthMode()">Зарегистрироваться</a>';
+    // reset panels
+    showPanel('empty');
+    renderSidebar();
+    renderList();
+  }
+});
 </script>
 </body>
 </html>
