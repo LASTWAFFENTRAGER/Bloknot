@@ -310,6 +310,72 @@ html, body {
 .call-btn-cam.off:hover { background: #5a2a2a; }
 .call-btn-end { background: #c44; color: #fff; }
 .call-btn-end:hover { background: #d55; }
+
+/* МОБИЛЬНЫЙ ТАББАР */
+#mobile-tabbar {
+  display: none;
+}
+.tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  gap: 2px;
+  transition: color 0.2s;
+}
+.tab-btn.active {
+  color: #c9a84c;
+}
+
+/* МОБИЛЬНЫЙ LAYOUT */
+@media (max-width: 768px) {
+  #app-wrapper {
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
+    position: fixed;
+    top: 0; left: 0;
+  }
+  #app {
+    display: flex;
+    flex-direction: row;
+    width: 300vw;
+    height: 100dvh;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #col-list, #col-editor {
+    width: 100vw;
+    min-width: 100vw;
+    height: 100dvh;
+    overflow-y: auto;
+    padding-bottom: 56px;
+  }
+  .col-entries {
+    width: 100vw;
+    min-width: 100vw;
+    height: 100dvh;
+    overflow-y: auto;
+    padding-bottom: 56px;
+  }
+  #mobile-tabbar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: #111;
+    border-top: 1px solid #2a2a2a;
+    z-index: 1000;
+  }
+  #call-panel { left: 0; }
+  #sidebar { display: none; }
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
 </head>
@@ -342,7 +408,7 @@ html, body {
   <div id="profile-card"></div>
 </div>
 
-<div id="app">
+<div id="app-wrapper"><div id="app">
   <aside id="sidebar">
     <div class="sb-head">
       <div class="sb-logo"><span class="clickable" onclick="openProfile()" id="sb-username">БЛОКНОТ</span> <span class="sync-dot" id="sync-dot"></span></div>
@@ -390,7 +456,7 @@ html, body {
       <div id="ee-statusbar"><span id="ee-wc">0 слов</span><span id="ee-saved"></span></div>
     </div>
   </div>
-</div>
+</div></div>
 
 <div id="overlay" onclick="handleBgClick(event)"><div id="mbox"></div></div>
 
@@ -516,7 +582,6 @@ function startFirestoreListeners(uid) {
     entries={}; snap.docs.forEach(d=>{ const e={id:d.id,...d.data()}; if(!entries[e.lineId])entries[e.lineId]=[]; entries[e.lineId].push(e); });
     renderSidebar(); renderList(); if(activeEntryId&&!isSharedLine)refreshViewPanel();
     document.getElementById('loading').style.display='none'; syncDot('ok');
-    // update profile entry count
     let ct=0; Object.values(entries).forEach(arr=>ct+=arr.length);
     sharedLines.forEach(sl=>ct+=(sharedEntries[sl.id]||[]).length);
     profileEntryCount=ct;
@@ -590,9 +655,9 @@ function enterEditMode(fresh=false){const entry=fresh?null:activeEntry();isNew=!
 function renderEditTags(){const area=document.getElementById('ee-tag-area');const inp=document.getElementById('ee-tag-input');area.innerHTML='';_eTags.forEach(t=>{const s=document.createElement('span');s.className='ee-tag';s.innerHTML=`${esc(t)}<span class="ee-tag-x" onclick="removeTag('${esc(t)}')">✕</span>`;area.appendChild(s);});area.appendChild(inp);}
 function updateWC(){const w=wc(document.getElementById('ee-body').value);document.getElementById('ee-wc').textContent=w+' '+(w===1?'слово':w<5?'слова':'слов');}
 
-window.selectLine = function(id,shared){isSharedLine=!!shared;activeLineId=id;activeEntryId=null;currentView='entries';document.getElementById('search-box').value='';renderSidebar();renderList();showPanel('empty');updateCallButton();};
+window.selectLine = function(id,shared){isSharedLine=!!shared;activeLineId=id;activeEntryId=null;currentView='entries';document.getElementById('search-box').value='';renderSidebar();renderList();showPanel('empty');updateCallButton();if(window.innerWidth<=768)window.mobileGoTo(1);};
 window.setView = function(v){currentView=v;renderList();};
-window.selectEntry = function(id){activeEntryId=id;renderList();refreshViewPanel();};
+window.selectEntry = function(id){activeEntryId=id;renderList();refreshViewPanel();if(window.innerWidth<=768)window.mobileGoTo(2);};
 window.cancelEdit = function(){if(isNew){showPanel('empty');activeEntryId=null;renderList();}else refreshViewPanel();};
 window.enterEditMode = ()=>{if(isSharedLine&&!canWrite()){alert('У вас нет прав на запись в этой линии');return;}enterEditMode(false);};
 window.handleTagKey = function(e){if(e.key==='Enter'||e.key===','){e.preventDefault();addTag();}};
@@ -639,7 +704,7 @@ window.renderNLModal = function(){
 window.pickIcon = i=>{_nlIcon=i;renderNLModal();};
 window.pickClr  = c=>{_nlColor=c;renderNLModal();};
 window.submitNewLine = async function(){
-  if(_submitting) return; // prevent double-click
+  if(_submitting) return;
   const name=(document.getElementById('nl-name').value||'').trim(); if(!name)return;
   _submitting = true;
   try{
@@ -695,8 +760,6 @@ window.removeMember = async function(lineId,memberUid){
   if(!confirm('Удалить участника?'))return;
   const updateObj = {}; updateObj[`members.${memberUid}`] = deleteField();
   await updateDoc(doc(db,'sharedLines',lineId), updateObj);
-  // Need deleteField from Firestore - we'll use a workaround
-  // Manually reconstruct members without the removed one
   const line=sharedLines.find(l=>l.id===lineId);
   if(!line)return;
   const newMembers = {...line.members}; delete newMembers[memberUid];
@@ -705,8 +768,6 @@ window.removeMember = async function(lineId,memberUid){
 };
 
 function deleteField() {
-  // Firestore FieldValue.delete() workaround: we just remove from object on next read
-  // For the removeMember we handle it via full members object replacement
   return null;
 }
 
@@ -720,12 +781,10 @@ window.addMemberToLine = async function(lineId){
   if(!line||line.ownerId!==uid()){errEl.textContent='Только создатель может добавлять участников';errEl.style.display='block';return;}
 
   let targetUid=null, targetHandle=null;
-  // Try as numeric ID
   if(/^\d{6}$/.test(handle)){
     const snapById=await getDocs(query(collection(db,'users'),where('numericId','==',parseInt(handle))));
     if(!snapById.empty){ targetUid=snapById.docs[0].id; targetHandle=snapById.docs[0].data().handle; }
   }
-  // Try as handle
   if(!targetUid){
     const snapByHandle=await getDocs(query(collection(db,'users'),where('handle','==',handle)));
     if(!snapByHandle.empty){ targetUid=snapByHandle.docs[0].id; targetHandle=snapByHandle.docs[0].data().handle; }
@@ -801,14 +860,12 @@ window.addFriend = async function(){
   }
   if(!targetUid){msg.textContent='Пользователь не найден';msg.style.color='#d47373';msg.style.display='block';return;}
   if(targetUid===uid()){msg.textContent='Нельзя добавить себя';msg.style.color='#d47373';msg.style.display='block';return;}
-  // Check if already friend
   const existing=await getOne(doc(db,'users',uid(),'friends',targetUid));
   if(existing.exists()){
     if(existing.data().status==='accepted'){msg.textContent='Уже в друзьях';msg.style.color='var(--dim)';msg.style.display='block';return;}
     if(existing.data().status==='pending'){msg.textContent='Заявка уже отправлена';msg.style.color='var(--dim)';msg.style.display='block';return;}
   }
   await setDoc(doc(db,'users',uid(),'friends',targetUid),{status:'pending',handle:targetHandle||targetUid,createdAt:Date.now()});
-  // Also create reciprocal request (they'll see as incoming)
   await setDoc(doc(db,'users',targetUid,'friends',uid()),{status:'incoming',handle:myProfile.handle,createdAt:Date.now()});
   msg.textContent='Заявка отправлена!'; msg.style.color='#73d473'; msg.style.display='block';
   inp.value='';
@@ -1022,13 +1079,42 @@ window.submitHandle = async function(){
   startFirestoreListeners(uid());
 };
 
+// Мобильная навигация
+let mobileCurrentScreen = 0;
+let touchStartX = 0;
+let touchStartY = 0;
+
+window.mobileGoTo = function(index) {
+  if (window.innerWidth > 768) return;
+  mobileCurrentScreen = index;
+  const app = document.getElementById('app');
+  if (app) app.style.transform = `translateX(-${index * 100}vw)`;
+  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i === index);
+  });
+};
+
+document.addEventListener('touchstart', (e) => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+  if (window.innerWidth > 768) return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.abs(dy) > Math.abs(dx)) return;
+  if (Math.abs(dx) < 50) return;
+  if (dx < 0 && mobileCurrentScreen < 2) window.mobileGoTo(mobileCurrentScreen + 1);
+  if (dx > 0 && mobileCurrentScreen > 0) window.mobileGoTo(mobileCurrentScreen - 1);
+}, { passive: true });
+
 onAuthStateChanged(auth, async user => {
   if(user){
     currentUser=user;
     document.getElementById('auth-screen').style.display='none';
     let profSnap = await getOne(doc(db,'users',user.uid));
     if(!profSnap.exists()){
-      // Fallback: search by uid field (for users created before direct-doc migration)
       const altSnap = await getDocs(query(collection(db,'users'),where('uid','==',user.uid)));
       if(!altSnap.empty) profSnap = altSnap.docs[0];
     }
@@ -1065,5 +1151,19 @@ onAuthStateChanged(auth, async user => {
     });
   }
 </script>
+<div id="mobile-tabbar">
+  <button class="tab-btn active" onclick="mobileGoTo(0)" id="tab-0">
+    <span style="font-size:20px">☰</span>
+    <span style="font-size:10px">Линии</span>
+  </button>
+  <button class="tab-btn" onclick="mobileGoTo(1)" id="tab-1">
+    <span style="font-size:20px">📋</span>
+    <span style="font-size:10px">Записи</span>
+  </button>
+  <button class="tab-btn" onclick="mobileGoTo(2)" id="tab-2">
+    <span style="font-size:20px">✏️</span>
+    <span style="font-size:10px">Редактор</span>
+  </button>
+</div>
 </body>
 </html>
