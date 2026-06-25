@@ -311,70 +311,78 @@ html, body {
 .call-btn-end { background: #c44; color: #fff; }
 .call-btn-end:hover { background: #d55; }
 
-/* МОБИЛЬНЫЙ ТАББАР */
-#mobile-tabbar {
-  display: none;
-}
-.tab-btn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: #666;
-  cursor: pointer;
-  gap: 2px;
-  transition: color 0.2s;
-}
-.tab-btn.active {
-  color: #c9a84c;
-}
+/* МОБИЛЬНАЯ БОКОВАЯ ПАНЕЛЬ */
+#mobile-sidebar { display: none; }
+#mobile-content { display: none; }
 
-/* МОБИЛЬНЫЙ LAYOUT */
 @media (max-width: 768px) {
-  #app-wrapper {
-    width: 100vw;
-    height: 100dvh;
+  #app { display: none !important; }
+
+  #mobile-sidebar {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 56px;
+    background: #0a0a0a;
+    border-right: 1px solid #1e1e1e;
+    z-index: 500;
+  }
+
+  #mobile-content {
+    display: block;
+    position: fixed;
+    left: 56px; top: 0; right: 0; bottom: 0;
     overflow: hidden;
-    position: fixed;
-    top: 0; left: 0;
+    background: #0d0d0d;
   }
-  #app {
-    display: flex;
-    flex-direction: row;
-    width: 300vw;
-    height: 100dvh;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  #col-list, #col-editor {
-    width: 100vw;
-    min-width: 100vw;
-    height: 100dvh;
+
+  .mobile-screen {
+    display: none;
+    width: 100%;
+    height: 100%;
     overflow-y: auto;
-    padding-bottom: 56px;
   }
-  .col-entries {
-    width: 100vw;
-    min-width: 100vw;
-    height: 100dvh;
-    overflow-y: auto;
-    padding-bottom: 56px;
-  }
-  #mobile-tabbar {
+  .mobile-screen.active { display: flex; }
+
+  .mobile-logo {
     display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    align-items: center;
+    justify-content: center;
     height: 56px;
-    background: #111;
-    border-top: 1px solid #2a2a2a;
-    z-index: 1000;
+    font-size: 20px;
+    color: #ffffff;
+    border-bottom: 1px solid #1e1e1e;
+    flex-shrink: 0;
   }
+
+  .mobile-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 56px;
+    background: none;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    gap: 2px;
+    flex-shrink: 0;
+    transition: color 0.2s;
+  }
+  .mobile-tab .tab-icon { font-size: 18px; }
+  .mobile-tab .tab-label { font-size: 9px; }
+  .mobile-tab.active { color: #c9a84c; }
+
+  .mobile-profile {
+    margin-top: auto;
+    border-top: 1px solid #1e1e1e;
+  }
+
+  /* Скрыть десктопный оверлей-профиль на мобилке */
+  #profile-panel { display: none !important; }
   #call-panel { left: 0; }
-  #sidebar { display: none; }
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
@@ -408,7 +416,7 @@ html, body {
   <div id="profile-card"></div>
 </div>
 
-<div id="app-wrapper"><div id="app">
+<div id="app">
   <aside id="sidebar">
     <div class="sb-head">
       <div class="sb-logo"><span class="clickable" onclick="openProfile()" id="sb-username">БЛОКНОТ</span> <span class="sync-dot" id="sync-dot"></span></div>
@@ -456,7 +464,7 @@ html, body {
       <div id="ee-statusbar"><span id="ee-wc">0 слов</span><span id="ee-saved"></span></div>
     </div>
   </div>
-</div></div>
+</div>
 
 <div id="overlay" onclick="handleBgClick(event)"><div id="mbox"></div></div>
 
@@ -472,6 +480,77 @@ html, body {
     <button class="call-btn call-btn-mic" id="call-btn-mic" onclick="toggleMic()" title="Микрофон">🎤</button>
     <button class="call-btn call-btn-cam" id="call-btn-cam" onclick="toggleCam()" title="Камера">📷</button>
     <button class="call-btn call-btn-end" onclick="endCall()" title="Завершить">✕</button>
+  </div>
+</div>
+
+<!-- МОБИЛЬНАЯ БОКОВАЯ ПАНЕЛЬ -->
+<div id="mobile-sidebar">
+  <div class="mobile-logo">✦</div>
+
+  <button class="mobile-tab" data-tab="people">
+    <span class="tab-icon">👥</span>
+    <span class="tab-label">Люди</span>
+  </button>
+
+  <button class="mobile-tab" data-tab="personal">
+    <span class="tab-icon">📓</span>
+    <span class="tab-label">Личное</span>
+  </button>
+
+  <button class="mobile-tab" data-tab="shared">
+    <span class="tab-icon">🤝</span>
+    <span class="tab-label">Совместное</span>
+  </button>
+
+  <button class="mobile-tab" data-tab="ai">
+    <span class="tab-icon">🤖</span>
+    <span class="tab-label">ИИ</span>
+  </button>
+
+  <button class="mobile-tab mobile-profile" data-tab="profile">
+    <span class="tab-icon">👤</span>
+    <span class="tab-label">Профиль</span>
+  </button>
+</div>
+
+<!-- МОБИЛЬНЫЙ КОНТЕНТ -->
+<div id="mobile-content">
+  <div class="mobile-screen" id="screen-people">
+    <div style="margin:auto;text-align:center;color:#444">
+      <div style="font-size:48px">👥</div>
+      <div style="font-size:14px;margin-top:8px;color:#555">Люди</div>
+      <div style="font-size:11px;color:#333;margin-top:4px">Скоро</div>
+    </div>
+  </div>
+
+  <div class="mobile-screen" id="screen-personal">
+    <div style="margin:auto;text-align:center;color:#444">
+      <div style="font-size:14px;color:#555">Загрузка...</div>
+    </div>
+  </div>
+
+  <div class="mobile-screen" id="screen-shared">
+    <div style="margin:auto;text-align:center;color:#444">
+      <div style="font-size:48px">🤝</div>
+      <div style="font-size:14px;margin-top:8px;color:#555">Совместное</div>
+      <div style="font-size:11px;color:#333;margin-top:4px">Скоро</div>
+    </div>
+  </div>
+
+  <div class="mobile-screen" id="screen-ai">
+    <div style="margin:auto;text-align:center;color:#444">
+      <div style="font-size:48px">🤖</div>
+      <div style="font-size:14px;margin-top:8px;color:#555">ИИ советник</div>
+      <div style="font-size:11px;color:#333;margin-top:4px">Скоро</div>
+    </div>
+  </div>
+
+  <div class="mobile-screen" id="screen-profile">
+    <div style="margin:auto;text-align:center;color:#444">
+      <div style="font-size:48px">👤</div>
+      <div style="font-size:14px;margin-top:8px;color:#555">Профиль</div>
+      <div style="font-size:11px;color:#333;margin-top:4px">Скоро</div>
+    </div>
   </div>
 </div>
 
@@ -655,9 +734,9 @@ function enterEditMode(fresh=false){const entry=fresh?null:activeEntry();isNew=!
 function renderEditTags(){const area=document.getElementById('ee-tag-area');const inp=document.getElementById('ee-tag-input');area.innerHTML='';_eTags.forEach(t=>{const s=document.createElement('span');s.className='ee-tag';s.innerHTML=`${esc(t)}<span class="ee-tag-x" onclick="removeTag('${esc(t)}')">✕</span>`;area.appendChild(s);});area.appendChild(inp);}
 function updateWC(){const w=wc(document.getElementById('ee-body').value);document.getElementById('ee-wc').textContent=w+' '+(w===1?'слово':w<5?'слова':'слов');}
 
-window.selectLine = function(id,shared){isSharedLine=!!shared;activeLineId=id;activeEntryId=null;currentView='entries';document.getElementById('search-box').value='';renderSidebar();renderList();showPanel('empty');updateCallButton();if(window.innerWidth<=768)window.mobileGoTo(1);};
+window.selectLine = function(id,shared){isSharedLine=!!shared;activeLineId=id;activeEntryId=null;currentView='entries';document.getElementById('search-box').value='';renderSidebar();renderList();showPanel('empty');updateCallButton();};
 window.setView = function(v){currentView=v;renderList();};
-window.selectEntry = function(id){activeEntryId=id;renderList();refreshViewPanel();if(window.innerWidth<=768)window.mobileGoTo(2);};
+window.selectEntry = function(id){activeEntryId=id;renderList();refreshViewPanel();};
 window.cancelEdit = function(){if(isNew){showPanel('empty');activeEntryId=null;renderList();}else refreshViewPanel();};
 window.enterEditMode = ()=>{if(isSharedLine&&!canWrite()){alert('У вас нет прав на запись в этой линии');return;}enterEditMode(false);};
 window.handleTagKey = function(e){if(e.key==='Enter'||e.key===','){e.preventDefault();addTag();}};
@@ -1079,35 +1158,24 @@ window.submitHandle = async function(){
   startFirestoreListeners(uid());
 };
 
-// Мобильная навигация
-let mobileCurrentScreen = 0;
-let touchStartX = 0;
-let touchStartY = 0;
-
-window.mobileGoTo = function(index) {
+// Мобильная навигация — переключение вкладок
+function mobileActivateTab(tabName) {
   if (window.innerWidth > 768) return;
-  mobileCurrentScreen = index;
-  const app = document.getElementById('app');
-  if (app) app.style.transform = `translateX(-${index * 100}vw)`;
-  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-    btn.classList.toggle('active', i === index);
+  document.querySelectorAll('.mobile-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
-};
+  document.querySelectorAll('.mobile-screen').forEach(screen => {
+    screen.classList.toggle('active', screen.id === 'screen-' + tabName);
+  });
+}
 
-document.addEventListener('touchstart', (e) => {
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
-}, { passive: true });
+document.querySelectorAll('.mobile-tab').forEach(btn => {
+  btn.addEventListener('click', () => mobileActivateTab(btn.dataset.tab));
+});
 
-document.addEventListener('touchend', (e) => {
-  if (window.innerWidth > 768) return;
-  const dx = e.changedTouches[0].clientX - touchStartX;
-  const dy = e.changedTouches[0].clientY - touchStartY;
-  if (Math.abs(dy) > Math.abs(dx)) return;
-  if (Math.abs(dx) < 50) return;
-  if (dx < 0 && mobileCurrentScreen < 2) window.mobileGoTo(mobileCurrentScreen + 1);
-  if (dx > 0 && mobileCurrentScreen > 0) window.mobileGoTo(mobileCurrentScreen - 1);
-}, { passive: true });
+window.addEventListener('load', () => {
+  if (window.innerWidth <= 768) mobileActivateTab('personal');
+});
 
 onAuthStateChanged(auth, async user => {
   if(user){
@@ -1151,19 +1219,5 @@ onAuthStateChanged(auth, async user => {
     });
   }
 </script>
-<div id="mobile-tabbar">
-  <button class="tab-btn active" onclick="mobileGoTo(0)" id="tab-0">
-    <span style="font-size:20px">☰</span>
-    <span style="font-size:10px">Линии</span>
-  </button>
-  <button class="tab-btn" onclick="mobileGoTo(1)" id="tab-1">
-    <span style="font-size:20px">📋</span>
-    <span style="font-size:10px">Записи</span>
-  </button>
-  <button class="tab-btn" onclick="mobileGoTo(2)" id="tab-2">
-    <span style="font-size:20px">✏️</span>
-    <span style="font-size:10px">Редактор</span>
-  </button>
-</div>
 </body>
 </html>
