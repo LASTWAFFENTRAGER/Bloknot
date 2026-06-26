@@ -880,7 +880,10 @@ function renderSidebar() {
   const te=lines.reduce((a,l)=>a+(entries[l.id]||[]).length,0)+sharedLines.reduce((a,l)=>a+(sharedEntries[l.id]||[]).length,0);
   const td=lines.reduce((a,l)=>a+(entries[l.id]||[]).reduce((b,e)=>b+(e.drafts?.length||0),0),0)+sharedLines.reduce((a,l)=>a+(sharedEntries[l.id]||[]).reduce((b,e)=>b+(e.drafts?.length||0),0),0);
   document.getElementById('stat-e').textContent=te; document.getElementById('stat-d').textContent=td;
-  if (typeof mpRenderLines === 'function') mpRenderLines();
+  if (typeof mpRenderLines === 'function') {
+    const activeTab = document.querySelector('.mobile-tab.active');
+    if (!activeTab || activeTab.dataset.tab === 'personal') mpRenderLines();
+  }
 }
 
 window.renderList = function(){
@@ -1359,7 +1362,9 @@ document.querySelectorAll('.mobile-tab').forEach(btn => {
 });
 
 window.addEventListener('load', () => {
-  if (window.innerWidth <= 768) mobileActivateTab('personal');
+  if (window.innerWidth <= 768) {
+    setTimeout(() => mobileActivateTab('personal'), 300);
+  }
 });
 
 // ─── МОБИЛЬНЫЙ ЛИЧНОЕ ───
