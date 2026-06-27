@@ -528,11 +528,33 @@
     <div class="screen" id="screen-shared">
       <div class="screen-header">
         <span class="screen-title">Совместное</span>
+        <button class="btn-icon" onclick="openNewSharedLine()">+</button>
       </div>
-      <div class="screen-placeholder">
-        <span class="ph-icon">🤝</span>
-        <span class="ph-title">Совместные линии</span>
-        <span class="ph-sub">Скоро</span>
+      <div class="list-body" id="shared-lines-list"></div>
+    </div>
+
+    <div class="screen" id="screen-shared-entries">
+      <div class="screen-header">
+        <button class="btn-back" onclick="goBack('screen-shared')">‹</button>
+        <span class="screen-title" id="shared-entries-title">Записи</span>
+        <button class="btn-icon" onclick="openNewSharedEntry()">+</button>
+      </div>
+      <div class="list-body" id="shared-entries-list"></div>
+    </div>
+
+    <div class="screen" id="screen-shared-editor">
+      <div class="screen-header">
+        <button class="btn-back" onclick="goBack('screen-shared-entries')">‹</button>
+        <span class="screen-title" id="shared-editor-title">Запись</span>
+        <button class="btn-icon" onclick="saveSharedEntry()">✓</button>
+      </div>
+      <div class="editor-body">
+        <input id="shared-editor-title-input" type="text" class="editor-title-input" placeholder="Заголовок...">
+        <textarea id="shared-editor-body" class="editor-body-input" placeholder="Текст записи..."></textarea>
+        <div style="border-top:1px solid #1a1a1a;margin-top:12px;padding-top:8px">
+          <div style="font-size:10px;color:#333;letter-spacing:0.08em;margin-bottom:4px">УЧАСТНИКИ</div>
+          <div id="shared-members-list" style="font-size:12px;color:#444"></div>
+        </div>
       </div>
     </div>
 
@@ -615,6 +637,11 @@ let entries = {};
 let activeLine = null;
 let activeEntry = null;
 let unsubs = [];
+let sharedLines = [];
+let sharedEntries = {};
+let activeSharedLine = null;
+let activeSharedEntry = null;
+let unsubSharedEntries = [];
 
 // ── НАВИГАЦИЯ ──
 let screenHistory = [];
@@ -634,6 +661,8 @@ function goBack(id) {
   showScreen(id);
   if (id === 'screen-lines') renderLines();
   if (id === 'screen-entries') renderEntries();
+  if (id === 'screen-shared') renderSharedLines();
+  if (id === 'screen-shared-entries') renderSharedEntries();
 }
 
 window.goBack = goBack;
@@ -644,13 +673,15 @@ window.addEventListener('popstate', () => {
   if (!active) return;
   if (active.id === 'screen-editor') goBack('screen-entries');
   else if (active.id === 'screen-entries') goBack('screen-lines');
+  else if (active.id === 'screen-shared-editor') goBack('screen-shared-entries');
+  else if (active.id === 'screen-shared-entries') goBack('screen-shared');
 });
 
 // ── ВКЛАДКИ ──
 window.switchTab = function(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   if (tab === 'personal') { goTo('screen-lines'); }
-  else if (tab === 'shared') { goTo('screen-shared'); }
+  else if (tab === 'shared') { goTo('screen-shared'); renderSharedLines(); }
   else if (tab === 'people') { goTo('screen-people'); }
   else if (tab === 'ai') { goTo('screen-ai'); }
   else if (tab === 'profile') { goTo('screen-profile'); }
@@ -794,6 +825,141 @@ window.deleteCurrentEntry = async function() {
   await deleteDoc(doc(db, 'users', currentUser.uid, 'entries', activeEntry.id));
   activeEntry = null;
   goBack('screen-entries');
+};
+
+// ── СОВМЕСТНЫЕ ЛИНИИ ──
+
+function renderSharedLines() {
+  const list = document.getElementById('shared-lines-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (sharedLines.length === 0) {
+    list.innerHTML = '<div class="list-empty">Нет совместных линий.<br>Нажми + чтобы создать.</div>';
+    return;
+  }
+  sharedLines.forEach(line => {
+    const count = (sharedEntries[line.id] || []).length;
+    const isOwner = line.ownerId === currentUser?.uid;
+    const el = document.createElement('div');
+    el.className = 'line-item';
+    el.innerHTML = `
+      <span class="line-item-icon">${line.icon || '🤝'}</span>
+      <span class="line-item-name">${line.name}</span>
+      <span class="line-item-count" style="color:#555">${isOwner ? 'владелец' : 'участник'} · ${count}</span>
+    `;
+    el.onclick = () => selectSharedLine(line);
+    addLongPress(el, () => {
+      if (!isOwner) { alert('Только владелец может удалить линию'); return; }
+      if (confirm(`Удалить совместную линию "${line.name}"?`)) {
+        deleteDoc(doc(db, 'sharedLines', line.id));
+      }
+    });
+    list.appendChild(el);
+  });
+}
+
+function selectSharedLine(line) {
+  activeSharedLine = line;
+  document.getElementById('shared-entries-title').textContent = line.name;
+  renderSharedEntries();
+  goTo('screen-shared-entries');
+  history.pushState({}, '');
+}
+
+function renderSharedEntries() {
+  const list = document.getElementById('shared-entries-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!activeSharedLine) return;
+  const arr = (sharedEntries[activeSharedLine.id] || []).sort((a, b) =>
+    (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)
+  );
+  if (arr.length === 0) {
+    list.innerHTML = '<div class="list-empty">Нет записей.<br>Нажми + чтобы создать.</div>';
+    return;
+  }
+  arr.forEach(entry => {
+    const el = document.createElement('div');
+    el.className = 'entry-item';
+    const preview = (entry.body || '').replace(/\n/g, ' ').slice(0, 80);
+    el.innerHTML = `
+      <div class="entry-title">${entry.title || 'Без заголовка'}</div>
+      ${preview ? `<div class="entry-preview">${preview}</div>` : ''}
+      <div class="entry-date" style="color:#2a5a2a;font-size:10px">${entry.authorEmail || ''}</div>
+    `;
+    el.onclick = () => selectSharedEntry(entry);
+    list.appendChild(el);
+  });
+}
+
+function selectSharedEntry(entry) {
+  activeSharedEntry = entry;
+  document.getElementById('shared-editor-title-input').value = entry.title || '';
+  document.getElementById('shared-editor-body').value = entry.body || '';
+  document.getElementById('shared-editor-title').textContent = activeSharedLine?.name || '';
+  renderSharedMembers();
+  goTo('screen-shared-editor');
+  history.pushState({}, '');
+}
+
+function renderSharedMembers() {
+  const el = document.getElementById('shared-members-list');
+  if (!el || !activeSharedLine) return;
+  const members = activeSharedLine.members || {};
+  const owner = activeSharedLine.ownerId;
+  let html = '';
+  if (owner) html += `<div style="margin-bottom:4px">👑 ${activeSharedLine.ownerEmail || owner} — владелец</div>`;
+  Object.entries(members).forEach(([uid, role]) => {
+    const roleLabel = role === 'admin' ? 'администратор' : role === 'partner' ? 'партнёр' : 'читатель';
+    html += `<div style="margin-bottom:4px">👤 ${uid} — ${roleLabel}</div>`;
+  });
+  el.innerHTML = html || '<div style="color:#2a2a2a">Нет участников</div>';
+}
+
+window.saveSharedEntry = async function() {
+  const title = document.getElementById('shared-editor-title-input').value.trim();
+  const body = document.getElementById('shared-editor-body').value.trim();
+  if (!title && !body) return;
+  if (!activeSharedLine || !currentUser) return;
+
+  if (activeSharedEntry) {
+    await setDoc(
+      doc(db, 'sharedLines', activeSharedLine.id, 'entries', activeSharedEntry.id),
+      { title, body, updatedAt: serverTimestamp(), authorEmail: currentUser.email },
+      { merge: true }
+    );
+  } else {
+    await addDoc(
+      collection(db, 'sharedLines', activeSharedLine.id, 'entries'),
+      { title, body, lineId: activeSharedLine.id, authorEmail: currentUser.email,
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp() }
+    );
+  }
+  goBack('screen-shared-entries');
+};
+
+window.openNewSharedEntry = function() {
+  if (!activeSharedLine) return;
+  activeSharedEntry = null;
+  document.getElementById('shared-editor-title-input').value = '';
+  document.getElementById('shared-editor-body').value = '';
+  document.getElementById('shared-editor-title').textContent = activeSharedLine.name;
+  goTo('screen-shared-editor');
+  history.pushState({}, '');
+};
+
+window.openNewSharedLine = function() {
+  openIconModal(async (name, icon) => {
+    if (!name || !currentUser) return;
+    const lineRef = doc(collection(db, 'sharedLines'));
+    await setDoc(lineRef, {
+      name, icon,
+      ownerId: currentUser.uid,
+      ownerEmail: currentUser.email,
+      members: {},
+      createdAt: serverTimestamp()
+    });
+  });
 };
 
 // ── ДОЛГОЕ НАЖАТИЕ ──
@@ -950,6 +1116,33 @@ function startListeners(uid) {
     if (activeLine) renderEntries();
     document.getElementById('loading').style.display = 'none';
   }));
+
+  unsubs.push(onSnapshot(collection(db, 'sharedLines'), snap => {
+    sharedLines = [];
+    snap.docs.forEach(d => {
+      const sl = { id: d.id, ...d.data() };
+      if (sl.ownerId === uid || (sl.members || {})[uid]) {
+        sharedLines.push(sl);
+      }
+    });
+    sharedLines.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    unsubSharedEntries.forEach(u => u());
+    unsubSharedEntries = [];
+    sharedLines.forEach(sl => {
+      const u = onSnapshot(
+        collection(db, 'sharedLines', sl.id, 'entries'),
+        snap2 => {
+          sharedEntries[sl.id] = snap2.docs.map(d => ({ id: d.id, ...d.data() }));
+          renderSharedLines();
+          if (activeSharedLine?.id === sl.id) renderSharedEntries();
+        }
+      );
+      unsubSharedEntries.push(u);
+    });
+
+    renderSharedLines();
+  }));
 }
 
 // ── МОДАЛЬНОЕ ОКНО ──
@@ -986,6 +1179,13 @@ document.getElementById('modal-overlay').addEventListener('click', e => {
 // ── ВЫХОД ──
 window.signOut = async function() {
   unsubs.forEach(u => u());
+  unsubSharedEntries.forEach(u => u());
+  unsubs = [];
+  unsubSharedEntries = [];
+  sharedLines = [];
+  sharedEntries = {};
+  activeSharedLine = null;
+  activeSharedEntry = null;
   await fbSignOut(auth);
 };
 
