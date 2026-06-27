@@ -419,6 +419,14 @@
       text-decoration: none;
       margin-left: 4px;
     }
+
+    .delete-hint {
+      font-size: 10px;
+      color: #c0392b;
+      text-align: center;
+      padding: 4px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -499,11 +507,20 @@
       <div class="screen-header">
         <button class="btn-back" onclick="goBack('screen-entries')">‹</button>
         <span class="screen-title" id="editor-line-title">Запись</span>
+        <button class="btn-icon" onclick="deleteCurrentEntry()" style="color:#c0392b;border-color:#2a1a1a;margin-right:4px">✕</button>
         <button class="btn-icon" onclick="saveCurrentEntry()">✓</button>
       </div>
       <div class="editor-body">
         <input id="editor-title" type="text" class="editor-title-input" placeholder="Заголовок...">
         <textarea id="editor-body" class="editor-body-input" placeholder="Текст записи..."></textarea>
+
+        <div style="border-top:1px solid #1a1a1a;margin-top:12px;padding-top:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:10px;color:#333;letter-spacing:0.1em">ЧЕРНОВИКИ</span>
+            <button onclick="addDraft()" style="background:none;border:1px solid #2a2a2a;color:#c9a84c;font-size:11px;padding:3px 10px;border-radius:4px;cursor:pointer">+ черновик</button>
+          </div>
+          <div id="drafts-list"></div>
+        </div>
       </div>
     </div>
 
@@ -657,6 +674,14 @@ function renderLines() {
       <span class="line-item-count">${count}</span>
     `;
     el.onclick = () => selectLine(line);
+    addLongPress(el, () => {
+      if (confirm(`Удалить линию "${line.name}"?`)) {
+        deleteDoc(doc(db, 'users', currentUser.uid, 'lines', line.id));
+        (entries[line.id] || []).forEach(e =>
+          deleteDoc(doc(db, 'users', currentUser.uid, 'entries', e.id))
+        );
+      }
+    });
     list.appendChild(el);
   });
 }
@@ -690,6 +715,12 @@ function renderEntries() {
       ${preview ? `<div class="entry-preview">${preview}</div>` : ''}
     `;
     el.onclick = () => selectEntry(entry);
+    addLongPress(el, () => {
+      if (confirm(`Удалить запись "${entry.title || 'Без заголовка'}"?`)) {
+        deleteDoc(doc(db, 'users', currentUser.uid, 'entries', entry.id));
+        renderEntries();
+      }
+    });
     list.appendChild(el);
   });
 }
@@ -699,19 +730,175 @@ function selectEntry(entry) {
   document.getElementById('editor-title').value = entry.title || '';
   document.getElementById('editor-body').value = entry.body || '';
   document.getElementById('editor-line-title').textContent = activeLine?.name || '';
+  renderDrafts(entry.id);
+  startDraftListener(entry.id);
   goTo('screen-editor');
   history.pushState({}, '');
 }
 
+// ── ЧЕРНОВИКИ ──
+let drafts = {};
+
+function renderDrafts(entryId) {
+  const list = document.getElementById('drafts-list');
+  if (!list) return;
+  const entryDrafts = drafts[entryId] || [];
+  if (entryDrafts.length === 0) {
+    list.innerHTML = '<div style="font-size:12px;color:#2a2a2a;padding:8px 0">Нет черновиков</div>';
+    return;
+  }
+  list.innerHTML = '';
+  entryDrafts.forEach(d => {
+    const el = document.createElement('div');
+    el.style.cssText = 'background:#0a0a0a;border:1px solid #1a1a1a;border-radius:6px;padding:10px;margin-bottom:8px;position:relative';
+    el.innerHTML = `
+      <div style="font-size:12px;color:#777;line-height:1.6">${d.text || ''}</div>
+      <button onclick="deleteDraft('${d.id}')"
+        style="position:absolute;top:6px;right:6px;background:none;border:none;color:#333;font-size:14px;cursor:pointer">✕</button>
+    `;
+    list.appendChild(el);
+  });
+}
+
+window.addDraft = function() {
+  openModal('Новый черновик', 'Текст черновика...', async (text) => {
+    if (!activeEntry || !currentUser) return;
+    await addDoc(
+      collection(db, 'users', currentUser.uid, 'entries', activeEntry.id, 'drafts'),
+      { text, createdAt: serverTimestamp() }
+    );
+  });
+};
+
+window.deleteDraft = async function(draftId) {
+  if (!activeEntry || !currentUser) return;
+  await deleteDoc(doc(db, 'users', currentUser.uid, 'entries', activeEntry.id, 'drafts', draftId));
+};
+
+function startDraftListener(entryId) {
+  if (window._draftUnsub) window._draftUnsub();
+  window._draftUnsub = onSnapshot(
+    collection(db, 'users', currentUser.uid, 'entries', entryId, 'drafts'),
+    snap => {
+      drafts[entryId] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderDrafts(entryId);
+    }
+  );
+}
+
+// ── УДАЛЕНИЕ ЗАПИСИ ──
+window.deleteCurrentEntry = async function() {
+  if (!activeEntry || !currentUser) return;
+  if (!confirm('Удалить запись?')) return;
+  if (window._draftUnsub) window._draftUnsub();
+  await deleteDoc(doc(db, 'users', currentUser.uid, 'entries', activeEntry.id));
+  activeEntry = null;
+  goBack('screen-entries');
+};
+
+// ── ДОЛГОЕ НАЖАТИЕ ──
+function addLongPress(el, callback) {
+  let timer;
+  el.addEventListener('touchstart', () => {
+    timer = setTimeout(callback, 600);
+  }, { passive: true });
+  el.addEventListener('touchend', () => clearTimeout(timer), { passive: true });
+  el.addEventListener('touchmove', () => clearTimeout(timer), { passive: true });
+}
+
 // ── СОЗДАТЬ ЛИНИЮ ──
 window.openNewLine = function() {
-  openModal('Новая линия', 'Название...', async (name) => {
+  openIconModal(async (name, icon) => {
     if (!name || !currentUser) return;
     await addDoc(collection(db, 'users', currentUser.uid, 'lines'), {
-      name, icon: '💡', order: lines.length, createdAt: serverTimestamp()
+      name, icon, order: lines.length, createdAt: serverTimestamp()
     });
   });
 };
+
+const ICONS = ['💡','✈','🏦','☕','🏭','🌐','🚀','📚','💼','🎯','🔬','🎨','🏠','❤️','⚡','🌿'];
+
+function openIconModal(callback) {
+  let selectedIcon = '💡';
+  const overlay = document.getElementById('modal-overlay');
+  const box = overlay.querySelector('.modal-box');
+
+  document.getElementById('modal-title').textContent = 'Новая линия';
+
+  box.innerHTML = `
+    <div class="modal-title">Новая линия</div>
+    <input id="modal-input" class="modal-input" type="text" placeholder="Название линии...">
+    <div style="margin:12px 0 4px;font-size:11px;color:#444;letter-spacing:0.08em">ИКОНКА</div>
+    <div id="icon-grid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:4px">
+      ${ICONS.map(ic => `
+        <button class="icon-btn ${ic === selectedIcon ? 'selected' : ''}"
+          data-icon="${ic}"
+          onclick="selectIcon('${ic}',this)"
+          style="font-size:20px;background:${ic === selectedIcon ? '#1e1e1e' : 'none'};
+          border:1px solid ${ic === selectedIcon ? '#c9a84c' : '#1a1a1a'};
+          border-radius:6px;padding:6px;cursor:pointer">
+          ${ic}
+        </button>`).join('')}
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeIconModal()">Отмена</button>
+      <button class="btn-confirm" onclick="submitIconModal()">Создать</button>
+    </div>
+  `;
+
+  window._iconModalCallback = callback;
+  window._selectedIcon = selectedIcon;
+  overlay.classList.add('open');
+  setTimeout(() => document.getElementById('modal-input').focus(), 100);
+}
+
+window.selectIcon = function(icon, btn) {
+  window._selectedIcon = icon;
+  document.querySelectorAll('.icon-btn').forEach(b => {
+    b.style.background = 'none';
+    b.style.border = '1px solid #1a1a1a';
+  });
+  btn.style.background = '#1e1e1e';
+  btn.style.border = '1px solid #c9a84c';
+};
+
+window.closeIconModal = function() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.querySelector('.modal-box').innerHTML = `
+    <div class="modal-title" id="modal-title">Новая линия</div>
+    <input id="modal-input" class="modal-input" type="text" placeholder="Название...">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+      <button class="btn-confirm" id="modal-confirm">Создать</button>
+    </div>
+  `;
+  reattachModalEvents();
+};
+
+window.submitIconModal = async function() {
+  const name = document.getElementById('modal-input').value.trim();
+  if (!name) { document.getElementById('modal-input').focus(); return; }
+  const icon = window._selectedIcon || '💡';
+  if (window._iconModalCallback) await window._iconModalCallback(name, icon);
+  closeIconModal();
+};
+
+function reattachModalEvents() {
+  const confirm = document.getElementById('modal-confirm');
+  if (confirm) {
+    confirm.onclick = async () => {
+      const val = document.getElementById('modal-input').value.trim();
+      if (val && modalCallback) await modalCallback(val);
+      closeModal();
+    };
+  }
+  const input = document.getElementById('modal-input');
+  if (input) {
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('modal-confirm')?.click();
+    });
+  }
+}
 
 // ── СОЗДАТЬ ЗАПИСЬ ──
 window.openNewEntry = function() {
