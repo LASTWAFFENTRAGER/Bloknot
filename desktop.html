@@ -540,6 +540,209 @@ html, body {
     font-family: inherit;
   }
 }
+
+/* Навигационные кнопки в сайдбаре */
+.sb-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: calc(100% - 20px);
+  margin: 2px 10px;
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: 11px;
+  cursor: pointer;
+  text-align: left;
+  letter-spacing: 0.05em;
+  transition: color 0.15s, background 0.15s;
+}
+.sb-nav-btn:hover { color: var(--text); background: var(--bg3); }
+.sb-nav-btn.active { color: var(--gold); background: var(--bg3); }
+.sb-nav-btn .nb-icon { font-size: 14px; }
+
+/* Панель людей и ИИ */
+#panel-people,
+#panel-ai {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+}
+
+#panel-people.active,
+#panel-ai.active {
+  display: flex;
+}
+
+#app.panel-mode #col-list,
+#app.panel-mode #col-editor {
+  display: none;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.panel-title {
+  flex: 1;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.d-chat-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  gap: 12px;
+  transition: background 0.1s;
+}
+.d-chat-item:hover { background: var(--bg2); }
+.d-chat-item.active { background: var(--bg3); }
+
+.d-chat-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.d-chat-info { flex: 1; min-width: 0; }
+.d-chat-name { font-size: 12px; color: var(--text); margin-bottom: 2px; }
+.d-chat-last { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.d-chat-time { font-size: 9px; color: var(--border2); flex-shrink: 0; }
+
+#d-chat-window {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+}
+#d-chat-window.open { display: flex; }
+
+.d-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.d-msg-bubble {
+  max-width: 60%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+.d-msg-out {
+  align-self: flex-end;
+  background: #1a1a0a;
+  border: 1px solid #3a3a1a;
+  color: var(--gold);
+}
+.d-msg-in {
+  align-self: flex-start;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.d-msg-time { font-size: 9px; color: var(--muted); margin-top: 2px; text-align: right; }
+.d-msg-sender { font-size: 9px; color: var(--muted); margin-bottom: 2px; }
+
+.d-msg-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg2);
+  flex-shrink: 0;
+}
+
+.d-msg-input {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: var(--serif);
+  font-size: 12px;
+  padding: 7px 10px;
+  outline: none;
+}
+.d-msg-input:focus { border-color: var(--gold); }
+
+.ai-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ai-msg-user {
+  align-self: flex-end;
+  max-width: 60%;
+  background: #1a1a0a;
+  border: 1px solid #3a3a1a;
+  color: var(--gold);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.ai-msg-bot {
+  align-self: flex-start;
+  max-width: 70%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.ai-thinking {
+  align-self: flex-start;
+  color: var(--muted);
+  font-size: 11px;
+  padding: 4px 0;
+  font-style: italic;
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
 </head>
@@ -578,6 +781,17 @@ html, body {
       <div class="sb-logo"><span class="clickable" onclick="openProfile()" id="sb-username">БЛОКНОТ</span> <span class="sync-dot" id="sync-dot"></span></div>
       <div class="sb-sub">стратегический</div>
     </div>
+    <div class="sb-section">РЕЖИМ</div>
+    <button class="sb-nav-btn active" id="nav-notes" onclick="switchDesktopMode('notes')">
+      <span class="nb-icon">📓</span> Блокнот
+    </button>
+    <button class="sb-nav-btn" id="nav-people" onclick="switchDesktopMode('people')">
+      <span class="nb-icon">👥</span> Люди
+    </button>
+    <button class="sb-nav-btn" id="nav-ai" onclick="switchDesktopMode('ai')">
+      <span class="nb-icon">🤖</span> ИИ советник
+    </button>
+
     <div class="sb-section">ЛИНИИ</div>
     <div id="lines-list"></div>
     <button id="btn-new-line" onclick="openNewLineModal()">+ новая линия</button>
@@ -619,6 +833,58 @@ html, body {
       <textarea id="ee-body" placeholder="Идея, план, анализ, детали...&#10;&#10;Пиши свободно."></textarea>
       <div id="ee-statusbar"><span id="ee-wc">0 слов</span><span id="ee-saved"></span></div>
     </div>
+  </div>
+</div>
+
+<!-- ПАНЕЛЬ ЛЮДИ -->
+<div id="panel-people">
+  <div style="display:flex;height:100%">
+    <div style="width:260px;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0">
+      <div class="panel-header">
+        <span class="panel-title">Люди</span>
+        <button class="btn-g" onclick="deskOpenNewChat()">+ чат</button>
+      </div>
+      <div style="padding:8px 10px;border-bottom:1px solid var(--border)">
+        <input id="d-people-search" type="text"
+          style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-family:var(--serif);font-size:11px;padding:6px 8px;outline:none"
+          placeholder="Поиск по нику..."
+          oninput="deskSearchUsers(this.value)">
+      </div>
+      <div id="d-search-results" style="display:none;border-bottom:1px solid var(--border)"></div>
+      <div class="panel-body" id="d-chats-list"></div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column">
+      <div id="d-chat-empty" style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;letter-spacing:0.05em">
+        Выбери чат или начни новый
+      </div>
+      <div id="d-chat-window">
+        <div class="panel-header">
+          <span class="panel-title" id="d-chat-title">Чат</span>
+        </div>
+        <div class="d-messages" id="d-messages-list"></div>
+        <div class="d-msg-input-row">
+          <input id="d-message-input" class="d-msg-input"
+            type="text" placeholder="Сообщение..."
+            onkeydown="if(event.key==='Enter')deskSendMessage()">
+          <button class="btn-p" onclick="deskSendMessage()">→</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ПАНЕЛЬ ИИ -->
+<div id="panel-ai">
+  <div class="panel-header">
+    <span class="panel-title">ИИ советник — DeepSeek</span>
+    <button class="btn-g" onclick="clearAiChat()">очистить</button>
+  </div>
+  <div class="ai-messages" id="ai-messages"></div>
+  <div class="d-msg-input-row">
+    <input id="ai-input" class="d-msg-input"
+      type="text" placeholder="Спроси что-нибудь..."
+      onkeydown="if(event.key==='Enter')sendAiMessage()">
+    <button class="btn-p" onclick="sendAiMessage()">→</button>
   </div>
 </div>
 
@@ -1317,6 +1583,258 @@ function stopCallDurationTimer() { if (callDurationTimer) { clearInterval(callDu
 
 const listHead=document.getElementById('list-head'); const extraRow=document.createElement('div'); extraRow.style='display:flex;gap:5px;justify-content:space-between;align-items:center;'; extraRow.innerHTML=`<button class="btn-p" style="font-size:10px;padding:5px 12px" onclick="openNewEntry()">+ запись</button><button class="btn-o" style="font-size:10px;padding:4px 10px;${!isSharedLine?'display:none':''}" id="btn-call" onclick="startCall()">📞 Позвонить</button><button class="btn-del" style="font-size:10px" onclick="confirmDelLine()">удалить линию</button>`; listHead.appendChild(extraRow);
 
+// ── ДЕСКТОП РЕЖИМЫ ──
+
+let deskMode = 'notes';
+let deskChats = [];
+let deskActiveChat = null;
+let deskUnsubMessages = null;
+let deskMyHandle = null;
+
+window.switchDesktopMode = function(mode) {
+  deskMode = mode;
+  document.querySelectorAll('.sb-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-' + mode)?.classList.add('active');
+
+  const colList = document.getElementById('col-list');
+  const colEditor = document.getElementById('col-editor');
+  const panelPeople = document.getElementById('panel-people');
+  const panelAi = document.getElementById('panel-ai');
+
+  colList.style.display = 'none';
+  colEditor.style.display = 'none';
+  panelPeople.classList.remove('active');
+  panelAi.classList.remove('active');
+
+  if (mode === 'notes') {
+    colList.style.display = '';
+    colEditor.style.display = '';
+  } else if (mode === 'people') {
+    panelPeople.classList.add('active');
+    deskRenderChats();
+  } else if (mode === 'ai') {
+    panelAi.classList.add('active');
+  }
+};
+
+// ── ДЕСКТОП МЕССЕНДЖЕР ──
+
+async function deskEnsureHandle() {
+  if (deskMyHandle) return deskMyHandle;
+  const snap = await getOne(doc(db, 'users', uid(), 'profile', 'main'));
+  if (snap?.handle) {
+    deskMyHandle = snap.handle;
+  } else {
+    const h = prompt('Задай свой уникальный ник (handle) без @:');
+    if (!h) return null;
+    deskMyHandle = h.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    await setDoc(doc(db, 'users', uid(), 'profile', 'main'), {
+      handle: deskMyHandle, email: auth.currentUser.email, uid: uid()
+    }, { merge: true });
+    await setDoc(doc(db, 'handles', deskMyHandle), {
+      uid: uid(), email: auth.currentUser.email, handle: deskMyHandle
+    });
+  }
+  return deskMyHandle;
+}
+
+function deskStartChatsListener() {
+  onSnapshot(collection(db, 'chats'), snap => {
+    deskChats = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(c => (c.members || []).includes(uid()))
+      .sort((a, b) => (b.lastAt?.seconds || 0) - (a.lastAt?.seconds || 0));
+    deskRenderChats();
+  });
+}
+
+function deskRenderChats() {
+  const list = document.getElementById('d-chats-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (deskChats.length === 0) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;font-size:11px;color:var(--muted)">Нет чатов.<br>Нажми + чат чтобы начать.</div>';
+    return;
+  }
+  deskChats.forEach(chat => {
+    const otherUid = (chat.members || []).find(m => m !== uid());
+    const otherHandle = (chat.memberHandles || {})[otherUid] || '?';
+    const el = document.createElement('div');
+    el.className = 'd-chat-item' + (deskActiveChat?.id === chat.id ? ' active' : '');
+    const lastTime = chat.lastAt ? deskFormatTime(chat.lastAt.seconds * 1000) : '';
+    el.innerHTML = `
+      <div class="d-chat-avatar">${otherHandle[0]?.toUpperCase()}</div>
+      <div class="d-chat-info">
+        <div class="d-chat-name">@${otherHandle}</div>
+        <div class="d-chat-last">${chat.lastMessage || 'Нет сообщений'}</div>
+      </div>
+      <div class="d-chat-time">${lastTime}</div>
+    `;
+    el.onclick = () => deskOpenChat(chat, otherHandle);
+    list.appendChild(el);
+  });
+}
+
+function deskFormatTime(ms) {
+  const d = new Date(ms);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString())
+    return d.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
+}
+
+function deskOpenChat(chat, otherHandle) {
+  deskActiveChat = chat;
+  document.getElementById('d-chat-empty').style.display = 'none';
+  document.getElementById('d-chat-window').classList.add('open');
+  document.getElementById('d-chat-title').textContent = '@' + otherHandle;
+  if (deskUnsubMessages) deskUnsubMessages();
+  deskUnsubMessages = onSnapshot(
+    collection(db, 'chats', chat.id, 'messages'),
+    snap => {
+      const msgs = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+      deskRenderMessages(msgs);
+    }
+  );
+  deskRenderChats();
+}
+
+function deskRenderMessages(msgs) {
+  const list = document.getElementById('d-messages-list');
+  if (!list) return;
+  list.innerHTML = '';
+  msgs.forEach(msg => {
+    const isOut = msg.senderUid === uid();
+    const wrapper = document.createElement('div');
+    wrapper.style.display = 'flex';
+    wrapper.style.flexDirection = 'column';
+    wrapper.style.alignItems = isOut ? 'flex-end' : 'flex-start';
+    const time = msg.createdAt ? deskFormatTime(msg.createdAt.seconds * 1000) : '';
+    wrapper.innerHTML = `
+      ${!isOut ? `<div class="d-msg-sender">@${msg.senderHandle || '?'}</div>` : ''}
+      <div class="d-msg-bubble ${isOut ? 'd-msg-out' : 'd-msg-in'}">${msg.text}</div>
+      <div class="d-msg-time">${time}</div>
+    `;
+    list.appendChild(wrapper);
+  });
+  list.scrollTop = list.scrollHeight;
+}
+
+window.deskSendMessage = async function() {
+  const input = document.getElementById('d-message-input');
+  const text = input.value.trim();
+  if (!text || !deskActiveChat) return;
+  input.value = '';
+  const handle = await deskEnsureHandle();
+  await addDoc(collection(db, 'chats', deskActiveChat.id, 'messages'), {
+    text, senderUid: uid(), senderHandle: handle, createdAt: serverTimestamp()
+  });
+  await setDoc(doc(db, 'chats', deskActiveChat.id),
+    { lastMessage: text, lastAt: serverTimestamp() }, { merge: true });
+};
+
+window.deskOpenNewChat = async function() {
+  const handle = prompt('Введи ник пользователя (@handle):');
+  if (!handle) return;
+  await deskStartChatWith(handle.replace('@', '').toLowerCase().trim());
+};
+
+window.deskSearchUsers = async function(val) {
+  const el = document.getElementById('d-search-results');
+  if (!val || val.length < 2) { el.style.display = 'none'; return; }
+  const clean = val.replace('@', '').toLowerCase().trim();
+  const snap = await getOne(doc(db, 'handles', clean));
+  el.style.display = 'block';
+  el.innerHTML = '';
+  if (!snap || snap.uid === uid()) {
+    el.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--muted)">Не найдено</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div class="d-chat-item">
+      <div class="d-chat-avatar">${snap.handle[0].toUpperCase()}</div>
+      <div class="d-chat-info">
+        <div class="d-chat-name">@${snap.handle}</div>
+        <div class="d-chat-last">${snap.email}</div>
+      </div>
+      <button class="btn-p" style="font-size:10px;padding:4px 10px"
+        onclick="deskStartChatWith('${snap.handle}')">Написать</button>
+    </div>
+  `;
+};
+
+async function deskStartChatWith(handle) {
+  const snap = await getOne(doc(db, 'handles', handle));
+  if (!snap) { alert('Пользователь @' + handle + ' не найден'); return; }
+  const myH = await deskEnsureHandle();
+  if (!myH) return;
+  const existing = deskChats.find(c =>
+    (c.members || []).includes(snap.uid) && (c.members || []).includes(uid())
+  );
+  if (existing) { deskOpenChat(existing, handle); return; }
+  const chatRef = doc(collection(db, 'chats'));
+  await setDoc(chatRef, {
+    members: [uid(), snap.uid],
+    memberHandles: { [uid()]: myH, [snap.uid]: handle },
+    createdAt: serverTimestamp(), lastMessage: '', lastAt: serverTimestamp()
+  });
+  deskOpenChat({ id: chatRef.id, members: [uid(), snap.uid],
+    memberHandles: { [uid()]: myH, [snap.uid]: handle } }, handle);
+  document.getElementById('d-search-results').style.display = 'none';
+  document.getElementById('d-people-search').value = '';
+}
+
+// ── ДЕСКТОП ИИ (DeepSeek) ──
+
+let aiHistory = [];
+
+window.sendAiMessage = async function() {
+  const input = document.getElementById('ai-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  appendAiMsg('user', text);
+  aiHistory.push({ role: 'user', content: text });
+
+  const thinking = document.createElement('div');
+  thinking.className = 'ai-thinking';
+  thinking.textContent = 'думает...';
+  document.getElementById('ai-messages').appendChild(thinking);
+
+  try {
+    const res = await fetch('https://YOUR_WORKER.workers.dev/ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: aiHistory })
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || data.reply || 'Нет ответа';
+    thinking.remove();
+    appendAiMsg('bot', reply);
+    aiHistory.push({ role: 'assistant', content: reply });
+  } catch(e) {
+    thinking.remove();
+    appendAiMsg('bot', 'Ошибка соединения с ИИ. Подключи Cloudflare Worker.');
+  }
+};
+
+function appendAiMsg(role, text) {
+  const el = document.createElement('div');
+  el.className = role === 'user' ? 'ai-msg-user' : 'ai-msg-bot';
+  el.textContent = text;
+  const list = document.getElementById('ai-messages');
+  list.appendChild(el);
+  list.scrollTop = list.scrollHeight;
+}
+
+window.clearAiChat = function() {
+  aiHistory = [];
+  document.getElementById('ai-messages').innerHTML = '';
+};
+
 window.toggleAuthMode = function(){authMode=authMode==='login'?'register':'login';document.getElementById('auth-submit').textContent=authMode==='login'?'Войти':'Зарегистрироваться';document.getElementById('auth-toggle').innerHTML=authMode==='login'?'Нет аккаунта? <a id="auth-toggle-link" onclick="toggleAuthMode()">Зарегистрироваться</a>':'Уже есть аккаунт? <a id="auth-toggle-link" onclick="toggleAuthMode()">Войти</a>';document.getElementById('auth-error').style.display='none';};
 window.handleAuthSubmit = async function(){
   const email=document.getElementById('auth-email').value.trim(); const password=document.getElementById('auth-password').value; const errorEl=document.getElementById('auth-error'); const submitBtn=document.getElementById('auth-submit');
@@ -1523,6 +2041,8 @@ onAuthStateChanged(auth, async user => {
       document.getElementById('loading').style.display='flex';
       activeLineId=null;activeEntryId=null;
       startFirestoreListeners(user.uid);
+      deskStartChatsListener();
+      deskEnsureHandle();
     }
   } else {
     if (callRoom) callRoom.disconnect();
