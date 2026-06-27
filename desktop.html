@@ -571,6 +571,8 @@ html, body {
   flex: 1;
   flex-direction: column;
   min-width: 0;
+  height: 100%;
+  overflow: hidden;
   background: var(--bg);
   border-left: 1px solid var(--border);
 }
@@ -644,7 +646,8 @@ html, body {
 #d-chat-window {
   display: none;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 #d-chat-window.open { display: flex; }
 
@@ -834,11 +837,9 @@ html, body {
       <div id="ee-statusbar"><span id="ee-wc">0 слов</span><span id="ee-saved"></span></div>
     </div>
   </div>
-</div>
 
-<!-- ПАНЕЛЬ ЛЮДИ -->
-<div id="panel-people">
-  <div style="display:flex;height:100%">
+  <div id="panel-people">
+  <div style="display:flex;height:100%;min-height:0;overflow:hidden">
     <div style="width:260px;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0">
       <div class="panel-header">
         <span class="panel-title">Люди</span>
@@ -873,8 +874,7 @@ html, body {
   </div>
 </div>
 
-<!-- ПАНЕЛЬ ИИ -->
-<div id="panel-ai">
+  <div id="panel-ai">
   <div class="panel-header">
     <span class="panel-title">ИИ советник — DeepSeek</span>
     <button class="btn-g" onclick="clearAiChat()">очистить</button>
