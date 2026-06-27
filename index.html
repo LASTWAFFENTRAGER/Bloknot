@@ -880,9 +880,11 @@ function renderSidebar() {
   const te=lines.reduce((a,l)=>a+(entries[l.id]||[]).length,0)+sharedLines.reduce((a,l)=>a+(sharedEntries[l.id]||[]).length,0);
   const td=lines.reduce((a,l)=>a+(entries[l.id]||[]).reduce((b,e)=>b+(e.drafts?.length||0),0),0)+sharedLines.reduce((a,l)=>a+(sharedEntries[l.id]||[]).reduce((b,e)=>b+(e.drafts?.length||0),0),0);
   document.getElementById('stat-e').textContent=te; document.getElementById('stat-d').textContent=td;
-  if (typeof mpRenderLines === 'function') {
+  if (typeof mpRenderLines === 'function' && window.innerWidth <= 768) {
     const activeTab = document.querySelector('.mobile-tab.active');
-    if (!activeTab || activeTab.dataset.tab === 'personal') mpRenderLines();
+    const tabName = activeTab ? activeTab.dataset.tab : 'personal';
+    if (tabName === 'personal') mpRenderLines();
+    if (tabName === 'shared') mpRenderShared && mpRenderShared();
   }
 }
 
@@ -1363,7 +1365,7 @@ document.querySelectorAll('.mobile-tab').forEach(btn => {
 
 window.addEventListener('load', () => {
   if (window.innerWidth <= 768) {
-    setTimeout(() => mobileActivateTab('personal'), 300);
+    mobileActivateTab('personal');
   }
 });
 
@@ -1400,6 +1402,10 @@ function mpGoBack(screenId) {
 function mpRenderLines() {
   const list = document.getElementById('mp-lines-list');
   if (!list) return;
+  if (lines === undefined || lines === null) {
+    list.innerHTML = '<div style="padding:24px;text-align:center;color:#333;font-size:13px">Загрузка...</div>';
+    return;
+  }
   list.innerHTML = '';
   if (lines.length === 0) {
     list.innerHTML = '<div style="padding:24px;text-align:center;color:#333;font-size:13px">Нет линий.<br>Нажми + чтобы создать.</div>';
