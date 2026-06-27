@@ -1795,6 +1795,7 @@ window.sendAiMessage = async function() {
   const text = input.value.trim();
   if (!text) return;
   input.value = '';
+  input.disabled = true;
 
   appendAiMsg('user', text);
   aiHistory.push({ role: 'user', content: text });
@@ -1803,21 +1804,25 @@ window.sendAiMessage = async function() {
   thinking.className = 'ai-thinking';
   thinking.textContent = 'думает...';
   document.getElementById('ai-messages').appendChild(thinking);
+  document.getElementById('ai-messages').scrollTop = 99999;
 
   try {
-    const res = await fetch('https://YOUR_WORKER.workers.dev/ai', {
+    const res = await fetch('https://bloknot.abdisaminuuluaibek2051.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages: aiHistory })
     });
     const data = await res.json();
-    const reply = data.content?.[0]?.text || data.reply || 'Нет ответа';
+    const reply = data.reply || 'Нет ответа';
     thinking.remove();
     appendAiMsg('bot', reply);
     aiHistory.push({ role: 'assistant', content: reply });
   } catch(e) {
     thinking.remove();
-    appendAiMsg('bot', 'Ошибка соединения с ИИ. Подключи Cloudflare Worker.');
+    appendAiMsg('bot', '⚠️ Ошибка соединения с ИИ.');
+  } finally {
+    input.disabled = false;
+    input.focus();
   }
 };
 

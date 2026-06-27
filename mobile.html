@@ -506,6 +506,43 @@
     }
 
     .user-result-item:active { background: #111; }
+
+    .mobile-ai-user {
+      align-self: flex-end;
+      max-width: 78%;
+      background: #1a1a0a;
+      border: 1px solid #3a3a1a;
+      color: #c9a84c;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border-bottom-right-radius: 3px;
+      font-size: 13px;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    .mobile-ai-bot {
+      align-self: flex-start;
+      max-width: 85%;
+      background: #0f0f0f;
+      border: 1px solid #1e1e1e;
+      color: #ccc;
+      padding: 8px 12px;
+      border-radius: 12px;
+      border-bottom-left-radius: 3px;
+      font-size: 13px;
+      line-height: 1.6;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .mobile-ai-thinking {
+      align-self: flex-start;
+      font-size: 11px;
+      color: #333;
+      font-style: italic;
+      padding: 4px 0;
+    }
   </style>
 </head>
 <body>
@@ -674,11 +711,20 @@
     <div class="screen" id="screen-ai">
       <div class="screen-header">
         <span class="screen-title">ИИ советник</span>
+        <button class="btn-icon" onclick="clearMobileAi()"
+          style="font-size:12px;width:auto;padding:0 8px">очистить</button>
       </div>
-      <div class="screen-placeholder">
-        <span class="ph-icon">🤖</span>
-        <span class="ph-title">DeepSeek</span>
-        <span class="ph-sub">Скоро</span>
+      <div id="mobile-ai-messages"
+        style="flex:1;overflow-y:auto;padding:12px;display:flex;
+        flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch">
+      </div>
+      <div style="display:flex;gap:8px;padding:10px 12px;
+        border-top:1px solid #1a1a1a;background:#0a0a0a">
+        <input id="mobile-ai-input" class="modal-input"
+          style="margin:0;flex:1" type="text"
+          placeholder="Спроси что-нибудь..."
+          onkeydown="if(event.key==='Enter')sendMobileAi()">
+        <button class="btn-icon" onclick="sendMobileAi()">→</button>
       </div>
     </div>
 
@@ -1561,6 +1607,60 @@ document.getElementById('auth-submit').onclick = handleAuthSubmit;
 document.getElementById('auth-password').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') { e.preventDefault(); handleAuthSubmit(); }
 });
+
+// ── МОБИЛЬНЫЙ ИИ ──
+
+let mobileAiHistory = [];
+
+window.sendMobileAi = async function() {
+  const input = document.getElementById('mobile-ai-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.disabled = true;
+
+  appendMobileAiMsg('user', text);
+  mobileAiHistory.push({ role: 'user', content: text });
+
+  const list = document.getElementById('mobile-ai-messages');
+  const thinking = document.createElement('div');
+  thinking.className = 'mobile-ai-thinking';
+  thinking.textContent = 'думает...';
+  list.appendChild(thinking);
+  list.scrollTop = 99999;
+
+  try {
+    const res = await fetch('https://bloknot.abdisaminuuluaibek2051.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: mobileAiHistory })
+    });
+    const data = await res.json();
+    const reply = data.reply || 'Нет ответа';
+    thinking.remove();
+    appendMobileAiMsg('bot', reply);
+    mobileAiHistory.push({ role: 'assistant', content: reply });
+  } catch(e) {
+    thinking.remove();
+    appendMobileAiMsg('bot', '⚠️ Ошибка соединения с ИИ.');
+  } finally {
+    input.disabled = false;
+  }
+};
+
+function appendMobileAiMsg(role, text) {
+  const el = document.createElement('div');
+  el.className = role === 'user' ? 'mobile-ai-user' : 'mobile-ai-bot';
+  el.textContent = text;
+  const list = document.getElementById('mobile-ai-messages');
+  list.appendChild(el);
+  list.scrollTop = 99999;
+}
+
+window.clearMobileAi = function() {
+  mobileAiHistory = [];
+  document.getElementById('mobile-ai-messages').innerHTML = '';
+};
 
 // ── ON AUTH STATE CHANGED ──
 onAuthStateChanged(auth, async user => {
