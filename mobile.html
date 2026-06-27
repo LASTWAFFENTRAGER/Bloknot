@@ -427,6 +427,85 @@
       padding: 4px;
       display: none;
     }
+
+    .msg-bubble {
+      max-width: 75%;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .msg-out {
+      align-self: flex-end;
+      background: #1a1a0a;
+      border: 1px solid #3a3a1a;
+      color: #c9a84c;
+      border-bottom-right-radius: 3px;
+    }
+
+    .msg-in {
+      align-self: flex-start;
+      background: #0f0f0f;
+      border: 1px solid #1e1e1e;
+      color: #ccc;
+      border-bottom-left-radius: 3px;
+    }
+
+    .msg-time {
+      font-size: 9px;
+      color: #333;
+      margin-top: 2px;
+      text-align: right;
+    }
+
+    .msg-sender {
+      font-size: 9px;
+      color: #555;
+      margin-bottom: 2px;
+    }
+
+    .chat-item {
+      display: flex;
+      align-items: center;
+      padding: 14px;
+      border-bottom: 1px solid #111;
+      cursor: pointer;
+      gap: 12px;
+    }
+
+    .chat-item:active { background: #111; }
+
+    .chat-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      color: #c9a84c;
+    }
+
+    .chat-info { flex: 1; min-width: 0; }
+    .chat-name { font-size: 14px; color: #ccc; margin-bottom: 2px; }
+    .chat-last { font-size: 11px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-time { font-size: 10px; color: #2a2a2a; flex-shrink: 0; }
+
+    .user-result-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      gap: 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #111;
+    }
+
+    .user-result-item:active { background: #111; }
   </style>
 </head>
 <body>
@@ -558,15 +637,36 @@
       </div>
     </div>
 
-    <!-- ЛЮДИ -->
+    <!-- ЛЮДИ: список чатов -->
     <div class="screen" id="screen-people">
       <div class="screen-header">
         <span class="screen-title">Люди</span>
+        <button class="btn-icon" onclick="openNewChat()" title="Новый чат">✎</button>
       </div>
-      <div class="screen-placeholder">
-        <span class="ph-icon">👥</span>
-        <span class="ph-title">Мессенджер</span>
-        <span class="ph-sub">Скоро</span>
+      <div style="padding:10px 12px;border-bottom:1px solid #111">
+        <input id="people-search" class="modal-input" style="margin:0"
+          type="text" placeholder="Поиск по нику (@handle)..."
+          oninput="searchUsers(this.value)">
+      </div>
+      <div id="search-results" style="display:none;border-bottom:1px solid #111"></div>
+      <div class="list-body" id="chats-list"></div>
+    </div>
+
+    <!-- ЛЮДИ: чат -->
+    <div class="screen" id="screen-chat">
+      <div class="screen-header">
+        <button class="btn-back" onclick="goBack('screen-people')">‹</button>
+        <div style="flex:1">
+          <div class="screen-title" id="chat-title">Чат</div>
+          <div id="chat-subtitle" style="font-size:9px;color:#333;letter-spacing:0.05em"></div>
+        </div>
+      </div>
+      <div id="messages-list" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch"></div>
+      <div style="display:flex;gap:8px;padding:10px 12px;border-top:1px solid #111;background:#0a0a0a">
+        <input id="message-input" class="modal-input" style="margin:0;flex:1"
+          type="text" placeholder="Сообщение..."
+          onkeydown="if(event.key==='Enter')sendMessage()">
+        <button class="btn-icon" onclick="sendMessage()" style="flex-shrink:0">→</button>
       </div>
     </div>
 
@@ -642,6 +742,11 @@ let sharedEntries = {};
 let activeSharedLine = null;
 let activeSharedEntry = null;
 let unsubSharedEntries = [];
+let chats = [];
+let activeChat = null;
+let activeChatMessages = [];
+let unsubMessages = null;
+let myHandle = null;
 
 // ── НАВИГАЦИЯ ──
 let screenHistory = [];
@@ -663,6 +768,10 @@ function goBack(id) {
   if (id === 'screen-entries') renderEntries();
   if (id === 'screen-shared') renderSharedLines();
   if (id === 'screen-shared-entries') renderSharedEntries();
+  if (id === 'screen-people') {
+    if (unsubMessages) { unsubMessages(); unsubMessages = null; }
+    renderChats();
+  }
 }
 
 window.goBack = goBack;
@@ -675,6 +784,7 @@ window.addEventListener('popstate', () => {
   else if (active.id === 'screen-entries') goBack('screen-lines');
   else if (active.id === 'screen-shared-editor') goBack('screen-shared-entries');
   else if (active.id === 'screen-shared-entries') goBack('screen-shared');
+  else if (active.id === 'screen-chat') goBack('screen-people');
 });
 
 // ── ВКЛАДКИ ──
@@ -682,7 +792,7 @@ window.switchTab = function(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   if (tab === 'personal') { goTo('screen-lines'); }
   else if (tab === 'shared') { goTo('screen-shared'); renderSharedLines(); }
-  else if (tab === 'people') { goTo('screen-people'); }
+  else if (tab === 'people') { goTo('screen-people'); renderChats(); }
   else if (tab === 'ai') { goTo('screen-ai'); }
   else if (tab === 'profile') { goTo('screen-profile'); }
 };
@@ -1143,6 +1253,9 @@ function startListeners(uid) {
 
     renderSharedLines();
   }));
+
+  startChatsListener(uid);
+  ensureMyHandle();
 }
 
 // ── МОДАЛЬНОЕ ОКНО ──
@@ -1176,16 +1289,232 @@ document.getElementById('modal-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('modal-overlay')) closeModal();
 });
 
+// ── МЕССЕНДЖЕР ──
+
+async function ensureMyHandle() {
+  if (myHandle) return myHandle;
+  const { getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  const snap = await getDoc(doc(db, 'users', currentUser.uid, 'profile', 'main'));
+  if (snap.exists() && snap.data().handle) {
+    myHandle = snap.data().handle;
+  } else {
+    const h = prompt('Задай свой уникальный ник (handle) без @:');
+    if (!h) return null;
+    myHandle = h.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    await setDoc(doc(db, 'users', currentUser.uid, 'profile', 'main'), {
+      handle: myHandle, email: currentUser.email, uid: currentUser.uid
+    }, { merge: true });
+    await setDoc(doc(db, 'handles', myHandle), {
+      uid: currentUser.uid, email: currentUser.email, handle: myHandle
+    });
+  }
+  return myHandle;
+}
+
+function startChatsListener(uid) {
+  unsubs.push(onSnapshot(collection(db, 'chats'), snap => {
+    chats = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(c => (c.members || []).includes(uid))
+      .sort((a, b) => (b.lastAt?.seconds || 0) - (a.lastAt?.seconds || 0));
+    renderChats();
+  }));
+}
+
+function renderChats() {
+  const list = document.getElementById('chats-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (chats.length === 0) {
+    list.innerHTML = '<div class="list-empty">Нет чатов.<br>Найди человека по нику и начни общение.</div>';
+    return;
+  }
+  chats.forEach(chat => {
+    const otherUid = (chat.members || []).find(m => m !== currentUser.uid);
+    const otherHandle = (chat.memberHandles || {})[otherUid] || otherUid || '?';
+    const el = document.createElement('div');
+    el.className = 'chat-item';
+    const lastTime = chat.lastAt ? formatTime(chat.lastAt.seconds * 1000) : '';
+    el.innerHTML = `
+      <div class="chat-avatar">${otherHandle[0]?.toUpperCase() || '?'}</div>
+      <div class="chat-info">
+        <div class="chat-name">@${otherHandle}</div>
+        <div class="chat-last">${chat.lastMessage || 'Нет сообщений'}</div>
+      </div>
+      <div class="chat-time">${lastTime}</div>
+    `;
+    el.onclick = () => openChat(chat, otherHandle);
+    list.appendChild(el);
+  });
+}
+
+function formatTime(ms) {
+  const d = new Date(ms);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) {
+    return d.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
+  }
+  return d.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
+}
+
+function openChat(chat, otherHandle) {
+  activeChat = chat;
+  document.getElementById('chat-title').textContent = '@' + otherHandle;
+  document.getElementById('chat-subtitle').textContent = chat.id;
+  renderMessages([]);
+  if (unsubMessages) unsubMessages();
+  unsubMessages = onSnapshot(
+    collection(db, 'chats', chat.id, 'messages'),
+    snap => {
+      activeChatMessages = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+      renderMessages(activeChatMessages);
+    }
+  );
+  goTo('screen-chat');
+  history.pushState({}, '');
+}
+
+function renderMessages(msgs) {
+  const list = document.getElementById('messages-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (msgs.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:#2a2a2a;font-size:12px;margin:auto">Начни разговор</div>';
+    return;
+  }
+  msgs.forEach(msg => {
+    const isOut = msg.senderUid === currentUser.uid;
+    const wrapper = document.createElement('div');
+    wrapper.style.display = 'flex';
+    wrapper.style.flexDirection = 'column';
+    wrapper.style.alignItems = isOut ? 'flex-end' : 'flex-start';
+    const time = msg.createdAt ? formatTime(msg.createdAt.seconds * 1000) : '';
+    wrapper.innerHTML = `
+      ${!isOut ? `<div class="msg-sender">@${msg.senderHandle || '?'}</div>` : ''}
+      <div class="msg-bubble ${isOut ? 'msg-out' : 'msg-in'}">${msg.text}</div>
+      <div class="msg-time">${time}</div>
+    `;
+    list.appendChild(wrapper);
+  });
+  list.scrollTop = list.scrollHeight;
+}
+
+window.sendMessage = async function() {
+  const input = document.getElementById('message-input');
+  const text = input.value.trim();
+  if (!text || !activeChat || !currentUser) return;
+  input.value = '';
+  const handle = await ensureMyHandle();
+  await addDoc(collection(db, 'chats', activeChat.id, 'messages'), {
+    text,
+    senderUid: currentUser.uid,
+    senderHandle: handle || currentUser.email,
+    createdAt: serverTimestamp()
+  });
+  await setDoc(doc(db, 'chats', activeChat.id), {
+    lastMessage: text,
+    lastAt: serverTimestamp()
+  }, { merge: true });
+};
+
+window.openNewChat = async function() {
+  const handle = prompt('Введи ник пользователя (@handle):');
+  if (!handle) return;
+  const cleanHandle = handle.replace('@', '').toLowerCase().trim();
+  await startChatWithHandle(cleanHandle);
+};
+
+window.searchUsers = async function(val) {
+  const resultsEl = document.getElementById('search-results');
+  if (!val || val.length < 2) { resultsEl.style.display = 'none'; return; }
+  const clean = val.replace('@', '').toLowerCase().trim();
+
+  const { getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  const snap = await getDoc(doc(db, 'handles', clean));
+  resultsEl.style.display = 'block';
+  resultsEl.innerHTML = '';
+
+  if (!snap.exists()) {
+    resultsEl.innerHTML = '<div style="padding:12px;font-size:12px;color:#333">Пользователь не найден</div>';
+    return;
+  }
+
+  const user = snap.data();
+  if (user.uid === currentUser.uid) {
+    resultsEl.innerHTML = '<div style="padding:12px;font-size:12px;color:#333">Это ты</div>';
+    return;
+  }
+
+  const el = document.createElement('div');
+  el.className = 'user-result-item';
+  el.innerHTML = `
+    <div class="chat-avatar">${user.handle[0].toUpperCase()}</div>
+    <div class="chat-info">
+      <div class="chat-name">@${user.handle}</div>
+      <div class="chat-last">${user.email}</div>
+    </div>
+    <button class="btn-confirm" style="font-size:11px;padding:6px 10px"
+      onclick="startChatWithHandle('${user.handle}')">Написать</button>
+  `;
+  resultsEl.appendChild(el);
+};
+
+async function startChatWithHandle(handle) {
+  const { getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  const snap = await getDoc(doc(db, 'handles', handle));
+  if (!snap.exists()) { alert('Пользователь @' + handle + ' не найден'); return; }
+
+  const otherUser = snap.data();
+  const myH = await ensureMyHandle();
+  if (!myH) return;
+
+  const existingChat = chats.find(c =>
+    (c.members || []).includes(otherUser.uid) && (c.members || []).includes(currentUser.uid)
+  );
+
+  if (existingChat) {
+    openChat(existingChat, handle);
+    document.getElementById('people-search').value = '';
+    document.getElementById('search-results').style.display = 'none';
+    return;
+  }
+
+  const chatRef = doc(collection(db, 'chats'));
+  await setDoc(chatRef, {
+    members: [currentUser.uid, otherUser.uid],
+    memberHandles: {
+      [currentUser.uid]: myH,
+      [otherUser.uid]: handle
+    },
+    createdAt: serverTimestamp(),
+    lastMessage: '',
+    lastAt: serverTimestamp()
+  });
+
+  const newChat = { id: chatRef.id, members: [currentUser.uid, otherUser.uid],
+    memberHandles: { [currentUser.uid]: myH, [otherUser.uid]: handle } };
+  openChat(newChat, handle);
+  document.getElementById('people-search').value = '';
+  document.getElementById('search-results').style.display = 'none';
+}
+
 // ── ВЫХОД ──
 window.signOut = async function() {
   unsubs.forEach(u => u());
   unsubSharedEntries.forEach(u => u());
+  if (unsubMessages) { unsubMessages(); unsubMessages = null; }
   unsubs = [];
   unsubSharedEntries = [];
   sharedLines = [];
   sharedEntries = {};
   activeSharedLine = null;
   activeSharedEntry = null;
+  chats = [];
+  activeChat = null;
+  activeChatMessages = [];
+  myHandle = null;
   await fbSignOut(auth);
 };
 
