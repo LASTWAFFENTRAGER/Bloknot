@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Блокнот">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d0d0d">
+  <title>Блокнот</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; height: 100%; background: #0d0d0d; color: #ccc; font-family: 'Courier New', monospace; overflow: hidden; }
+
+    /* ── LAYOUT ── */
+    #app {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+    }
+
+    /* ── БОКОВАЯ ПАНЕЛЬ ── */
+    #sidebar {
+      width: 56px;
+      min-width: 56px;
+      height: 100%;
+      background: #0a0a0a;
+      border-right: 1px solid #1a1a1a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: #fff;
+      border-bottom: 1px solid #1a1a1a;
+      flex-shrink: 0;
+    }
+
+    .sidebar-tabs {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      width: 100%;
+    }
+
+    .tab-btn {
+      width: 100%;
+      height: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      color: #444;
+      cursor: pointer;
+      transition: color 0.2s;
+      flex-shrink: 0;
+    }
+
+    .tab-btn .icon { font-size: 20px; }
+    .tab-btn .label { font-size: 8px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .tab-btn.active { color: #c9a84c; }
+    .tab-btn:active { opacity: 0.7; }
+
+    .sidebar-profile {
+      margin-top: auto;
+      border-top: 1px solid #1a1a1a;
+      width: 100%;
+    }
+
+    /* ── ОСНОВНОЙ КОНТЕНТ ── */
+    #content {
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      background: #0d0d0d;
+      overflow: hidden;
+    }
+
+    .screen.active { display: flex; }
+
+    /* ── ШАПКА ЭКРАНА ── */
+    .screen-header {
+      height: 52px;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 10px;
+      background: #0a0a0a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+
+    .screen-title {
+      flex: 1;
+      font-size: 13px;
+      color: #aaa;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .btn-back {
+      background: none;
+      border: none;
+      color: #c9a84c;
+      font-size: 22px;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+    }
+
+    .btn-icon {
+      background: none;
+      border: 1px solid #2a2a2a;
+      color: #c9a84c;
+      font-size: 18px;
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── СПИСОК ── */
+    .list-body {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .list-empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: #333;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .line-item {
+      display: flex;
+      align-items: center;
+      padding: 16px 14px;
+      border-bottom: 1px solid #111;
+      cursor: pointer;
+      gap: 12px;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .line-item:active { background: #111; }
+    .line-item-icon { font-size: 20px; flex-shrink: 0; }
+    .line-item-name { flex: 1; font-size: 14px; color: #ccc; }
+    .line-item-count { font-size: 11px; color: #333; }
+
+    .entry-item {
+      padding: 14px;
+      border-bottom: 1px solid #111;
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .entry-item:active { background: #111; }
+    .entry-title { font-size: 14px; color: #ccc; margin-bottom: 4px; }
+    .entry-preview { font-size: 11px; color: #3a3a3a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .entry-date { font-size: 10px; color: #2a2a2a; margin-top: 4px; }
+
+    /* ── РЕДАКТОР ── */
+    .editor-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 12px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .editor-title-input {
+      background: none;
+      border: none;
+      border-bottom: 1px solid #222;
+      color: #ddd;
+      font-size: 18px;
+      font-family: inherit;
+      padding: 8px 0;
+      outline: none;
+      width: 100%;
+    }
+
+    .editor-body-input {
+      background: none;
+      border: none;
+      color: #999;
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.7;
+      resize: none;
+      outline: none;
+      flex: 1;
+      min-height: 50vh;
+      width: 100%;
+    }
+
+    /* ── PLACEHOLDER ЭКРАНЫ ── */
+    .screen-placeholder {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: #2a2a2a;
+    }
+
+    .screen-placeholder .ph-icon { font-size: 52px; }
+    .screen-placeholder .ph-title { font-size: 14px; color: #333; }
+    .screen-placeholder .ph-sub { font-size: 11px; color: #222; }
+
+    /* ── МОДАЛЬНОЕ ОКНО ── */
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #modal-overlay.open { display: flex; }
+
+    .modal-box {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 24px;
+      width: calc(100% - 40px);
+      max-width: 360px;
+      z-index: 10000;
+    }
+
+    .modal-title {
+      font-size: 13px;
+      color: #888;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .modal-input {
+      width: 100%;
+      background: #0a0a0a;
+      border: 1px solid #2a2a2a;
+      color: #ccc;
+      font-family: inherit;
+      font-size: 14px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      outline: none;
+      margin-bottom: 12px;
+    }
+
+    .modal-input:focus { border-color: #c9a84c; }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 16px;
+    }
+
+    .btn-cancel {
+      background: none;
+      border: 1px solid #2a2a2a;
+      color: #555;
+      font-family: inherit;
+      font-size: 12px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-confirm {
+      background: #c9a84c;
+      border: none;
+      color: #000;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* ── LOADING ── */
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: #0d0d0d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      font-size: 13px;
+      color: #333;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── AUTH ── */
+    #auth-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0d0d0d;
+      z-index: 100000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #auth-overlay.open { display: flex; }
+    .auth-box {
+      width: 100%;
+      max-width: 340px;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 28px 24px 20px;
+    }
+    .auth-logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .auth-logo .al-icon { font-size: 32px; margin-bottom: 6px; }
+    .auth-logo .al-name {
+      font-size: 12px;
+      letter-spacing: 6px;
+      color: #c9a84c;
+      text-transform: uppercase;
+    }
+    .auth-logo .al-sub {
+      font-size: 9px;
+      color: #333;
+      letter-spacing: 2px;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+    .auth-error {
+      background: #1a0f0f;
+      border: 1px solid #3a1a1a;
+      border-radius: 4px;
+      color: #c44;
+      font-size: 11px;
+      padding: 8px 10px;
+      margin-bottom: 12px;
+      display: none;
+    }
+    .auth-input {
+      width: 100%;
+      background: #0a0a0a;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      color: #ccc;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 10px;
+    }
+    .auth-input:focus { border-color: #c9a84c; }
+    .auth-submit {
+      width: 100%;
+      background: #c9a84c;
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      padding: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 4px;
+      margin-bottom: 14px;
+    }
+    .auth-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .auth-toggle {
+      text-align: center;
+      font-size: 12px;
+      color: #555;
+    }
+    .auth-toggle a {
+      color: #c9a84c;
+      cursor: pointer;
+      text-decoration: none;
+      margin-left: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading">БЛОКНОТ...</div>
+
+<!-- ЭКРАН АВТОРИЗАЦИИ -->
+<div id="auth-overlay" class="open">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="al-icon">✦</div>
+      <div class="al-name">БЛОКНОТ</div>
+      <div class="al-sub">стратегический</div>
+    </div>
+    <div class="auth-error" id="auth-error"></div>
+    <input class="auth-input" id="auth-email" type="email" placeholder="Email" autocomplete="email">
+    <input class="auth-input" id="auth-password" type="password" placeholder="Пароль" autocomplete="current-password">
+    <button class="auth-submit" id="auth-submit">Войти</button>
+    <div class="auth-toggle" id="auth-toggle">Нет аккаунта? <a id="auth-toggle-link">Зарегистрироваться</a></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+
+  <!-- БОКОВАЯ ПАНЕЛЬ -->
+  <div id="sidebar">
+    <div class="sidebar-logo">✦</div>
+    <div class="sidebar-tabs">
+      <button class="tab-btn active" data-tab="personal" onclick="switchTab('personal')">
+        <span class="icon">📓</span>
+        <span class="label">Личное</span>
+      </button>
+      <button class="tab-btn" data-tab="shared" onclick="switchTab('shared')">
+        <span class="icon">🤝</span>
+        <span class="label">Совм.</span>
+      </button>
+      <button class="tab-btn" data-tab="people" onclick="switchTab('people')">
+        <span class="icon">👥</span>
+        <span class="label">Люди</span>
+      </button>
+      <button class="tab-btn" data-tab="ai" onclick="switchTab('ai')">
+        <span class="icon">🤖</span>
+        <span class="label">ИИ</span>
+      </button>
+    </div>
+    <div class="sidebar-profile">
+      <button class="tab-btn" data-tab="profile" onclick="switchTab('profile')">
+        <span class="icon">👤</span>
+        <span class="label">Профиль</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- КОНТЕНТ -->
+  <div id="content">
+
+    <!-- ЛИЧНОЕ: список линий -->
+    <div class="screen active" id="screen-lines">
+      <div class="screen-header">
+        <span class="screen-title">Личное</span>
+        <button class="btn-icon" onclick="openNewLine()">+</button>
+      </div>
+      <div class="list-body" id="lines-list"></div>
+    </div>
+
+    <!-- ЛИЧНОЕ: список записей -->
+    <div class="screen" id="screen-entries">
+      <div class="screen-header">
+        <button class="btn-back" onclick="goBack('screen-lines')">‹</button>
+        <span class="screen-title" id="entries-title">Записи</span>
+        <button class="btn-icon" onclick="openNewEntry()">+</button>
+      </div>
+      <div class="list-body" id="entries-list"></div>
+    </div>
+
+    <!-- РЕДАКТОР -->
+    <div class="screen" id="screen-editor">
+      <div class="screen-header">
+        <button class="btn-back" onclick="goBack('screen-entries')">‹</button>
+        <span class="screen-title" id="editor-line-title">Запись</span>
+        <button class="btn-icon" onclick="saveCurrentEntry()">✓</button>
+      </div>
+      <div class="editor-body">
+        <input id="editor-title" type="text" class="editor-title-input" placeholder="Заголовок...">
+        <textarea id="editor-body" class="editor-body-input" placeholder="Текст записи..."></textarea>
+      </div>
+    </div>
+
+    <!-- СОВМЕСТНОЕ -->
+    <div class="screen" id="screen-shared">
+      <div class="screen-header">
+        <span class="screen-title">Совместное</span>
+      </div>
+      <div class="screen-placeholder">
+        <span class="ph-icon">🤝</span>
+        <span class="ph-title">Совместные линии</span>
+        <span class="ph-sub">Скоро</span>
+      </div>
+    </div>
+
+    <!-- ЛЮДИ -->
+    <div class="screen" id="screen-people">
+      <div class="screen-header">
+        <span class="screen-title">Люди</span>
+      </div>
+      <div class="screen-placeholder">
+        <span class="ph-icon">👥</span>
+        <span class="ph-title">Мессенджер</span>
+        <span class="ph-sub">Скоро</span>
+      </div>
+    </div>
+
+    <!-- ИИ -->
+    <div class="screen" id="screen-ai">
+      <div class="screen-header">
+        <span class="screen-title">ИИ советник</span>
+      </div>
+      <div class="screen-placeholder">
+        <span class="ph-icon">🤖</span>
+        <span class="ph-title">DeepSeek</span>
+        <span class="ph-sub">Скоро</span>
+      </div>
+    </div>
+
+    <!-- ПРОФИЛЬ -->
+    <div class="screen" id="screen-profile">
+      <div class="screen-header">
+        <span class="screen-title">Профиль</span>
+        <button class="btn-icon" onclick="signOut()">↩</button>
+      </div>
+      <div class="screen-placeholder">
+        <span class="ph-icon">👤</span>
+        <span class="ph-title" id="profile-email"></span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- МОДАЛЬНОЕ ОКНО -->
+<div id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Новая линия</div>
+    <input id="modal-input" class="modal-input" type="text" placeholder="Название...">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+      <button class="btn-confirm" id="modal-confirm">Создать</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as fbSignOut }
+  from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
+import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy }
+  from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
+
+// ── FIREBASE CONFIG ──
+const app = initializeApp({
+  apiKey:            "AIzaSyC8q_pr3kIOlb9UEKbxhAuKu9vz6vfQosw",
+  authDomain:        "project-id-6ca36.firebaseapp.com",
+  projectId:         "project-id-6ca36",
+  storageBucket:     "project-id-6ca36.firebasestorage.app",
+  messagingSenderId: "57707102531",
+  appId:             "1:57707102531:web:5c279fb59d7b46c90baff6"
+});
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ── СОСТОЯНИЕ ──
+let currentUser = null;
+let authMode = 'login';
+let lines = [];
+let entries = {};
+let activeLine = null;
+let activeEntry = null;
+let unsubs = [];
+
+// ── НАВИГАЦИЯ ──
+let screenHistory = [];
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goTo(id) {
+  const current = document.querySelector('.screen.active');
+  if (current) screenHistory.push(current.id);
+  showScreen(id);
+}
+
+function goBack(id) {
+  showScreen(id);
+  if (id === 'screen-lines') renderLines();
+  if (id === 'screen-entries') renderEntries();
+}
+
+window.goBack = goBack;
+
+// Системная кнопка назад Android
+window.addEventListener('popstate', () => {
+  const active = document.querySelector('.screen.active');
+  if (!active) return;
+  if (active.id === 'screen-editor') goBack('screen-entries');
+  else if (active.id === 'screen-entries') goBack('screen-lines');
+});
+
+// ── ВКЛАДКИ ──
+window.switchTab = function(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  if (tab === 'personal') { goTo('screen-lines'); }
+  else if (tab === 'shared') { goTo('screen-shared'); }
+  else if (tab === 'people') { goTo('screen-people'); }
+  else if (tab === 'ai') { goTo('screen-ai'); }
+  else if (tab === 'profile') { goTo('screen-profile'); }
+};
+
+// ── РЕНДЕР ЛИНИЙ ──
+function renderLines() {
+  const list = document.getElementById('lines-list');
+  list.innerHTML = '';
+  if (lines.length === 0) {
+    list.innerHTML = '<div class="list-empty">Нет линий.<br>Нажми + чтобы создать.</div>';
+    return;
+  }
+  lines.forEach(line => {
+    const count = (entries[line.id] || []).length;
+    const el = document.createElement('div');
+    el.className = 'line-item';
+    el.innerHTML = `
+      <span class="line-item-icon">${line.icon || '💡'}</span>
+      <span class="line-item-name">${line.name}</span>
+      <span class="line-item-count">${count}</span>
+    `;
+    el.onclick = () => selectLine(line);
+    list.appendChild(el);
+  });
+}
+
+function selectLine(line) {
+  activeLine = line;
+  document.getElementById('entries-title').textContent = line.name;
+  renderEntries();
+  goTo('screen-entries');
+  history.pushState({}, '');
+}
+
+// ── РЕНДЕР ЗАПИСЕЙ ──
+function renderEntries() {
+  const list = document.getElementById('entries-list');
+  list.innerHTML = '';
+  if (!activeLine) return;
+  const arr = (entries[activeLine.id] || []).sort((a, b) => {
+    return (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0);
+  });
+  if (arr.length === 0) {
+    list.innerHTML = '<div class="list-empty">Нет записей.<br>Нажми + чтобы создать.</div>';
+    return;
+  }
+  arr.forEach(entry => {
+    const el = document.createElement('div');
+    el.className = 'entry-item';
+    const preview = (entry.body || '').replace(/\n/g, ' ').slice(0, 80);
+    el.innerHTML = `
+      <div class="entry-title">${entry.title || 'Без заголовка'}</div>
+      ${preview ? `<div class="entry-preview">${preview}</div>` : ''}
+    `;
+    el.onclick = () => selectEntry(entry);
+    list.appendChild(el);
+  });
+}
+
+function selectEntry(entry) {
+  activeEntry = entry;
+  document.getElementById('editor-title').value = entry.title || '';
+  document.getElementById('editor-body').value = entry.body || '';
+  document.getElementById('editor-line-title').textContent = activeLine?.name || '';
+  goTo('screen-editor');
+  history.pushState({}, '');
+}
+
+// ── СОЗДАТЬ ЛИНИЮ ──
+window.openNewLine = function() {
+  openModal('Новая линия', 'Название...', async (name) => {
+    if (!name || !currentUser) return;
+    await addDoc(collection(db, 'users', currentUser.uid, 'lines'), {
+      name, icon: '💡', order: lines.length, createdAt: serverTimestamp()
+    });
+  });
+};
+
+// ── СОЗДАТЬ ЗАПИСЬ ──
+window.openNewEntry = function() {
+  if (!activeLine) return;
+  activeEntry = null;
+  document.getElementById('editor-title').value = '';
+  document.getElementById('editor-body').value = '';
+  document.getElementById('editor-line-title').textContent = activeLine.name;
+  goTo('screen-editor');
+  history.pushState({}, '');
+};
+
+// ── СОХРАНИТЬ ЗАПИСЬ ──
+window.saveCurrentEntry = async function() {
+  const title = document.getElementById('editor-title').value.trim();
+  const body = document.getElementById('editor-body').value.trim();
+  if (!title && !body) return;
+  if (!activeLine || !currentUser) return;
+
+  if (activeEntry) {
+    await setDoc(doc(db, 'users', currentUser.uid, 'entries', activeEntry.id),
+      { title, body, lineId: activeLine.id, updatedAt: serverTimestamp() }, { merge: true });
+  } else {
+    await addDoc(collection(db, 'users', currentUser.uid, 'entries'), {
+      title, body, lineId: activeLine.id, createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+  }
+  goBack('screen-entries');
+};
+
+// ── FIREBASE LISTENERS ──
+function startListeners(uid) {
+  unsubs.forEach(u => u());
+  unsubs = [];
+
+  unsubs.push(onSnapshot(collection(db, 'users', uid, 'lines'), snap => {
+    lines = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.order || 0) - (b.order || 0));
+    renderLines();
+  }));
+
+  unsubs.push(onSnapshot(collection(db, 'users', uid, 'entries'), snap => {
+    entries = {};
+    snap.docs.forEach(d => {
+      const e = { id: d.id, ...d.data() };
+      if (!entries[e.lineId]) entries[e.lineId] = [];
+      entries[e.lineId].push(e);
+    });
+    renderLines();
+    if (activeLine) renderEntries();
+    document.getElementById('loading').style.display = 'none';
+  }));
+}
+
+// ── МОДАЛЬНОЕ ОКНО ──
+let modalCallback = null;
+
+function openModal(title, placeholder, callback) {
+  modalCallback = callback;
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-input').value = '';
+  document.getElementById('modal-input').placeholder = placeholder;
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('modal-input').focus(), 100);
+}
+
+window.closeModal = function() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  modalCallback = null;
+};
+
+document.getElementById('modal-confirm').onclick = async () => {
+  const val = document.getElementById('modal-input').value.trim();
+  if (val && modalCallback) await modalCallback(val);
+  closeModal();
+};
+
+document.getElementById('modal-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('modal-confirm').click();
+});
+
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+
+// ── ВЫХОД ──
+window.signOut = async function() {
+  unsubs.forEach(u => u());
+  await fbSignOut(auth);
+};
+
+// ── АВТОРИЗАЦИЯ ──
+window.toggleAuthMode = function() {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  document.getElementById('auth-submit').textContent = authMode === 'login' ? 'Войти' : 'Зарегистрироваться';
+  document.getElementById('auth-toggle').innerHTML = authMode === 'login'
+    ? 'Нет аккаунта? <a id="auth-toggle-link">Зарегистрироваться</a>'
+    : 'Уже есть аккаунт? <a id="auth-toggle-link">Войти</a>';
+  document.getElementById('auth-toggle-link').onclick = toggleAuthMode;
+  document.getElementById('auth-error').style.display = 'none';
+};
+
+window.handleAuthSubmit = async function() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errorEl = document.getElementById('auth-error');
+  const submitBtn = document.getElementById('auth-submit');
+  if (!email || !password) {
+    errorEl.textContent = 'Введите email и пароль';
+    errorEl.style.display = 'block';
+    return;
+  }
+  errorEl.style.display = 'none';
+  submitBtn.disabled = true;
+  submitBtn.textContent = authMode === 'login' ? 'Вход...' : 'Регистрация...';
+  try {
+    if (authMode === 'login') {
+      await signInWithEmailAndPassword(auth, email, password);
+    } else {
+      await createUserWithEmailAndPassword(auth, email, password);
+    }
+  } catch (err) {
+    errorEl.textContent = err.message.replace('Firebase: ', '').replace(/\(auth\/.*\)/, '').trim();
+    errorEl.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.textContent = authMode === 'login' ? 'Войти' : 'Зарегистрироваться';
+  }
+};
+
+document.getElementById('auth-toggle-link').onclick = toggleAuthMode;
+document.getElementById('auth-submit').onclick = handleAuthSubmit;
+document.getElementById('auth-password').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); handleAuthSubmit(); }
+});
+
+// ── ON AUTH STATE CHANGED ──
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('auth-overlay').classList.remove('open');
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('loading').style.display = 'flex';
+    document.getElementById('profile-email').textContent = user.email;
+    startListeners(user.uid);
+  } else {
+    currentUser = null;
+    unsubs.forEach(u => u());
+    unsubs = [];
+    lines = [];
+    entries = {};
+    activeLine = null;
+    activeEntry = null;
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('auth-overlay').classList.add('open');
+    document.getElementById('auth-email').value = '';
+    document.getElementById('auth-password').value = '';
+    document.getElementById('auth-error').style.display = 'none';
+    document.getElementById('auth-submit').disabled = false;
+    document.getElementById('auth-submit').textContent = 'Войти';
+    authMode = 'login';
+    document.getElementById('auth-toggle').innerHTML = 'Нет аккаунта? <a id="auth-toggle-link">Зарегистрироваться</a>';
+    document.getElementById('auth-toggle-link').onclick = toggleAuthMode;
+  }
+});
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js');
+    });
+  }
+</script>
+</body>
+</html>
