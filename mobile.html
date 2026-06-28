@@ -543,6 +543,24 @@
       font-style: italic;
       padding: 4px 0;
     }
+
+    .avatar-option {
+      font-size: 28px;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 2px solid #1a1a1a;
+      cursor: pointer;
+      background: #0a0a0a;
+      transition: border-color 0.15s;
+    }
+    .avatar-option.selected {
+      border-color: #c9a84c;
+      background: #1a1a0a;
+    }
   </style>
 </head>
 <body>
@@ -732,11 +750,82 @@
     <div class="screen" id="screen-profile">
       <div class="screen-header">
         <span class="screen-title">Профиль</span>
-        <button class="btn-icon" onclick="signOut()">↩</button>
+        <button class="btn-icon" onclick="signOut()" title="Выйти"
+          style="font-size:14px">↩</button>
       </div>
-      <div class="screen-placeholder">
-        <span class="ph-icon">👤</span>
-        <span class="ph-title" id="profile-email"></span>
+      <div style="flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:16px">
+
+        <!-- Аватар -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 0">
+          <div id="profile-avatar"
+            style="width:80px;height:80px;border-radius:50%;background:#1a1a1a;
+            border:2px solid #c9a84c;display:flex;align-items:center;justify-content:center;
+            font-size:36px;cursor:pointer" onclick="changeAvatar()" title="Сменить аватар">
+            👤
+          </div>
+          <div style="font-size:10px;color:#333;letter-spacing:0.05em">нажми чтобы сменить</div>
+        </div>
+
+        <!-- Имя -->
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:10px;color:#444;letter-spacing:0.1em">ИМЯ</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="profile-name-input" class="modal-input"
+              style="margin:0;flex:1" type="text" placeholder="Твоё имя...">
+            <button class="btn-icon" onclick="saveProfileName()">✓</button>
+          </div>
+        </div>
+
+        <!-- Handle -->
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:10px;color:#444;letter-spacing:0.1em">НИК (HANDLE)</div>
+          <div id="profile-handle-display"
+            style="font-size:14px;color:#c9a84c;font-family:monospace;
+            padding:10px 12px;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:6px">
+            —
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:10px;color:#444;letter-spacing:0.1em">EMAIL</div>
+          <div id="profile-email"
+            style="font-size:13px;color:#555;padding:10px 12px;
+            background:#0a0a0a;border:1px solid #1a1a1a;border-radius:6px">
+            —
+          </div>
+        </div>
+
+        <!-- Числовой ID -->
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:10px;color:#444;letter-spacing:0.1em">ID</div>
+          <div id="profile-numeric-id"
+            style="font-size:13px;color:#333;font-family:monospace;
+            padding:10px 12px;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:6px">
+            —
+          </div>
+        </div>
+
+        <!-- Статистика -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+          <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-radius:6px;padding:12px;text-align:center">
+            <div id="profile-lines-count" style="font-size:22px;color:#c9a84c">0</div>
+            <div style="font-size:10px;color:#333;margin-top:2px">линий</div>
+          </div>
+          <div style="background:#0a0a0a;border:1px solid #1a1a1a;border-radius:6px;padding:12px;text-align:center">
+            <div id="profile-entries-count" style="font-size:22px;color:#c9a84c">0</div>
+            <div style="font-size:10px;color:#333;margin-top:2px">записей</div>
+          </div>
+        </div>
+
+        <!-- Выход -->
+        <button onclick="signOut()"
+          style="margin-top:8px;width:100%;background:none;border:1px solid #2a1a1a;
+          color:#c0392b;font-family:inherit;font-size:12px;padding:12px;
+          border-radius:6px;cursor:pointer;letter-spacing:0.05em">
+          Выйти из аккаунта
+        </button>
+
       </div>
     </div>
 
@@ -759,7 +848,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as fbSignOut }
   from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
-import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy }
+import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy, getDoc }
   from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 
 // ── FIREBASE CONFIG ──
@@ -840,7 +929,7 @@ window.switchTab = function(tab) {
   else if (tab === 'shared') { goTo('screen-shared'); renderSharedLines(); }
   else if (tab === 'people') { goTo('screen-people'); renderChats(); }
   else if (tab === 'ai') { goTo('screen-ai'); }
-  else if (tab === 'profile') { goTo('screen-profile'); }
+  else if (tab === 'profile') { goTo('screen-profile'); loadProfile(); }
 };
 
 // ── РЕНДЕР ЛИНИЙ ──
@@ -1607,6 +1696,77 @@ document.getElementById('auth-submit').onclick = handleAuthSubmit;
 document.getElementById('auth-password').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') { e.preventDefault(); handleAuthSubmit(); }
 });
+
+// ── ПРОФИЛЬ ──
+
+const AVATARS = ['👤','😊','😎','🧠','🚀','⚡','🌿','🔥','🎯','💡','🦊','🐺','🦁','🐉','🌙','⭐'];
+
+async function loadProfile() {
+  if (!currentUser) return;
+
+  document.getElementById('profile-email').textContent = currentUser.email;
+
+  const numId = currentUser.uid.replace(/\D/g, '').slice(0, 8) || currentUser.uid.slice(0, 8);
+  document.getElementById('profile-numeric-id').textContent = '#' + numId;
+
+  document.getElementById('profile-lines-count').textContent = lines.length;
+  const totalEntries = Object.values(entries).reduce((s, arr) => s + arr.length, 0);
+  document.getElementById('profile-entries-count').textContent = totalEntries;
+
+  const snap = await getDoc(doc(db, 'users', currentUser.uid, 'profile', 'main'));
+  if (snap.exists()) {
+    const data = snap.data();
+    if (data.handle) {
+      document.getElementById('profile-handle-display').textContent = '@' + data.handle;
+      myHandle = data.handle;
+    }
+    if (data.name) {
+      document.getElementById('profile-name-input').value = data.name;
+    }
+    if (data.avatar) {
+      document.getElementById('profile-avatar').textContent = data.avatar;
+    }
+  }
+}
+
+window.saveProfileName = async function() {
+  const name = document.getElementById('profile-name-input').value.trim();
+  if (!name || !currentUser) return;
+  await setDoc(doc(db, 'users', currentUser.uid, 'profile', 'main'),
+    { name }, { merge: true });
+  const btn = document.querySelector('[onclick="saveProfileName()"]');
+  if (btn) { btn.textContent = '✓'; btn.style.color = '#4caf50'; }
+  setTimeout(() => { if (btn) { btn.textContent = '✓'; btn.style.color = '#c9a84c'; } }, 1500);
+};
+
+window.changeAvatar = function() {
+  const current = document.getElementById('profile-avatar').textContent;
+  openModal('Выбери аватар', '', null);
+
+  const box = document.querySelector('.modal-box');
+  box.innerHTML = `
+    <div class="modal-title">Аватар</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
+      ${AVATARS.map(a => `
+        <button class="avatar-option ${a === current ? 'selected' : ''}"
+          onclick="selectAvatar('${a}',this)">${a}</button>
+      `).join('')}
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Закрыть</button>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+};
+
+window.selectAvatar = async function(avatar, btn) {
+  document.querySelectorAll('.avatar-option').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('profile-avatar').textContent = avatar;
+  await setDoc(doc(db, 'users', currentUser.uid, 'profile', 'main'),
+    { avatar }, { merge: true });
+  closeModal();
+};
 
 // ── МОБИЛЬНЫЙ ИИ ──
 

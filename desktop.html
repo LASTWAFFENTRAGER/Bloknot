@@ -1378,6 +1378,19 @@ async function renderProfilePanel(){
       <div id="pf-friend-msg" style="margin-top:6px;font-size:10px;font-family:var(--sans);display:none"></div>
     </div>
     <div class="m-act" style="margin-top:12px"><button class="btn-g" onclick="closeProfile()">Закрыть</button></div>`;
+
+  setTimeout(() => {
+    const numId = (currentUser?.uid || '').replace(/\D/g,'').slice(0,8) || '—';
+    const idEl = document.getElementById('d-profile-id');
+    if (idEl) idEl.textContent = '#' + numId;
+    const linesEl = document.getElementById('d-profile-lines');
+    const entriesEl = document.getElementById('d-profile-entries');
+    if (linesEl) linesEl.textContent = lines.length;
+    if (entriesEl) {
+      const total = Object.values(entries).reduce((s,a)=>s+a.length,0);
+      entriesEl.textContent = total;
+    }
+  }, 10);
 }
 
 window.addFriend = async function(){
