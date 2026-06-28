@@ -1399,12 +1399,14 @@ window.addFriend = async function(){
   if(!val){msg.textContent='Введите никнейм или ID';msg.style.color='#d47373';msg.style.display='block';return;}
 
   let targetUid=null,targetHandle=null;
-  if(/^\d{6}$/.test(val)){
-    const snap=await getDocs(query(collection(db,'users'),where('numericId','==',parseInt(val))));
+  if(/^#?\d+$/.test(val)){
+    const numId = parseInt(val.replace('#',''));
+    const snap=await getDocs(query(collection(db,'users'),where('numericId','==',numId)));
     if(!snap.empty){targetUid=snap.docs[0].id;targetHandle=snap.docs[0].data().handle;}
   }
   if(!targetUid){
-    const snap=await getDocs(query(collection(db,'users'),where('handle','==',val)));
+    const cleanVal = val.replace('#','');
+    const snap=await getDocs(query(collection(db,'users'),where('handle','==',cleanVal)));
     if(!snap.empty){targetUid=snap.docs[0].id;targetHandle=snap.docs[0].data().handle;}
   }
   if(!targetUid){msg.textContent='Пользователь не найден';msg.style.color='#d47373';msg.style.display='block';return;}
