@@ -1084,7 +1084,15 @@ function canManage() {
 
 async function loadProfile(uid) {
   const snap = await getOne(doc(db,'users',uid));
-  if(snap.exists()) return snap.data();
+  if (snap && snap.exists()) {
+    myProfile = { uid, ...snap.data() };
+    const displayName = myProfile.name || myProfile.handle || '';
+    if (displayName) {
+      const sbUser = document.getElementById('sb-username');
+      if (sbUser) sbUser.textContent = displayName;
+    }
+    return myProfile;
+  }
   return null;
 }
 
@@ -1348,50 +1356,160 @@ window.closeProfile = function(){document.getElementById('profile-panel').classL
 async function renderProfilePanel(){
   if(!myProfile) return;
   await loadFriends();
-  const card=document.getElementById('profile-card');
-  const friendRows=Object.values(friends).map(f=>{
-    const [init,clr]=getAvatar(f.handle||f.id);
+  const card = document.getElementById('profile-card');
+
+  const avatarEmoji = myProfile.avatar || null;
+  const avatarBlock = avatarEmoji
+    ? `<div id="d-avatar-display" style="width:64px;height:64px;border-radius:50%;background:#1a1a1a;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:30px;cursor:pointer" onclick="deskChangeAvatar()">${avatarEmoji}</div>`
+    : `<div id="d-avatar-display" style="width:64px;height:64px;border-radius:50%;cursor:pointer" onclick="deskChangeAvatar()">${avatarHTML(myProfile.handle)}</div>`;
+
+  const friendRows = Object.values(friends).map(f => {
+    const [init,clr] = getAvatar(f.handle||f.id);
     return `<div class="friend-row"><span class="avatar avatar-sm" style="background:${clr}">${esc(init)}</span><span class="fr-name">${esc(f.handle||f.id)}</span><span class="fr-status">${f.status==='pending'?'ожидает':f.status==='accepted'?'друг':'заявка'}</span></div>`;
-  }).join('')||'<div style="color:var(--dim);font-size:11px">Нет друзей</div>';
+  }).join('') || '<div style="color:var(--dim);font-size:11px">Нет друзей</div>';
+
+  const totalEntries = Object.values(entries).reduce((s,a)=>s+a.length,0);
 
   card.innerHTML = `
-    <div class="prof-top">
-      ${avatarHTML(myProfile.handle)}
-      <div class="prof-info">
-        <div class="prof-name">${esc(myProfile.handle||'?')}</div>
+    <div class="prof-top" style="align-items:center;gap:14px">
+      ${avatarBlock}
+      <div class="prof-info" style="flex:1;min-width:0">
+        <div class="prof-name" style="font-size:14px">${esc(myProfile.name || myProfile.handle || '?')}</div>
         <div class="prof-handle">@${esc(myProfile.handle||'?')}</div>
-        <div class="prof-id">ID: ${myProfile.numericId||'—'}</div>
+        <div class="prof-id" style="font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px">ID: #${myProfile.numericId||'—'}</div>
       </div>
     </div>
-    <div class="prof-stat-row">
-      <div class="prof-stat"><span class="ps-num">${profileEntryCount}</span><span class="ps-lbl">записей</span></div>
+
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px">
+
+      <div>
+        <label class="m-lbl">ИМЯ</label>
+        <div style="display:flex;gap:6px">
+          <input class="m-in" id="d-profile-name" value="${esc(myProfile.name||'')}"
+            placeholder="Твоё имя..." style="margin-bottom:0;flex:1">
+          <button class="btn-p" onclick="deskSaveName()" style="padding:7px 12px;flex-shrink:0">✓</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="m-lbl">НИК</label>
+        <div style="display:flex;gap:6px">
+          <input class="m-in" id="d-profile-handle" value="${esc(myProfile.handle||'')}"
+            placeholder="новый_ник" style="margin-bottom:0;flex:1;font-family:var(--mono)">
+          <button class="btn-p" onclick="deskSaveHandle()" style="padding:7px 12px;flex-shrink:0">✓</button>
+        </div>
+        <div id="d-handle-msg" style="display:none;font-size:10px;margin-top:4px;font-family:var(--sans)"></div>
+      </div>
+
+    </div>
+
+    <div class="prof-stat-row" style="margin-top:12px">
+      <div class="prof-stat"><span class="ps-num">${lines.length}</span><span class="ps-lbl">линий</span></div>
+      <div class="prof-stat"><span class="ps-num">${totalEntries}</span><span class="ps-lbl">записей</span></div>
       <div class="prof-stat"><span class="ps-num">${Object.values(friends).filter(f=>f.status==='accepted').length}</span><span class="ps-lbl">друзей</span></div>
     </div>
-    <div class="prof-section-title">ДРУЗЬЯ</div>
+
+    <div class="prof-section-title" style="margin-top:14px">ДРУЗЬЯ</div>
     ${friendRows}
+
     <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
-      <label class="m-lbl">ДОБАВИТЬ ДРУГА</label>
+      <label class="m-lbl">НАЙТИ ПОЛЬЗОВАТЕЛЯ</label>
       <div style="display:flex;gap:6px">
-        <input class="m-in" id="pf-friend-input" placeholder="Никнейм или ID" style="margin-bottom:0;flex:1">
+        <input class="m-in" id="pf-friend-input"
+          placeholder="@никнейм или #12345678"
+          style="margin-bottom:0;flex:1">
         <button class="btn-p" onclick="addFriend()" style="padding:7px 12px;flex-shrink:0">+</button>
       </div>
       <div id="pf-friend-msg" style="margin-top:6px;font-size:10px;font-family:var(--sans);display:none"></div>
     </div>
-    <div class="m-act" style="margin-top:12px"><button class="btn-g" onclick="closeProfile()">Закрыть</button></div>`;
 
-  setTimeout(() => {
-    const numId = (currentUser?.uid || '').replace(/\D/g,'').slice(0,8) || '—';
-    const idEl = document.getElementById('d-profile-id');
-    if (idEl) idEl.textContent = '#' + numId;
-    const linesEl = document.getElementById('d-profile-lines');
-    const entriesEl = document.getElementById('d-profile-entries');
-    if (linesEl) linesEl.textContent = lines.length;
-    if (entriesEl) {
-      const total = Object.values(entries).reduce((s,a)=>s+a.length,0);
-      entriesEl.textContent = total;
-    }
-  }, 10);
+    <div class="m-act" style="margin-top:14px;display:flex;gap:8px">
+      <button class="btn-g" onclick="closeProfile()">Закрыть</button>
+      <button class="btn-o" onclick="handleLogout()" style="margin-left:auto">Выйти</button>
+    </div>
+  `;
 }
+
+const DESK_AVATARS = ['👤','😊','😎','🧠','🚀','⚡','🌿','🔥','🎯','💡','🦊','🐺','🦁','🐉','🌙','⭐'];
+
+window.deskChangeAvatar = function() {
+  const current = myProfile?.avatar || '';
+  openModal(`
+    <div class="m-title">Аватар</div>
+    <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:16px">
+      ${DESK_AVATARS.map(a => `
+        <button onclick="deskSelectAvatar('${a}',this)"
+          style="font-size:22px;width:40px;height:40px;display:flex;align-items:center;
+          justify-content:center;border-radius:50%;cursor:pointer;
+          background:${a===current?'#1e1e1e':'none'};
+          border:2px solid ${a===current?'var(--gold)':'var(--border)'}">${a}</button>
+      `).join('')}
+    </div>
+    <div class="m-act"><button class="btn-g" onclick="closeModal()">Закрыть</button></div>
+  `);
+};
+
+window.deskSelectAvatar = async function(avatar, btn) {
+  document.querySelectorAll('#mbox button[onclick^="deskSelectAvatar"]').forEach(b => {
+    b.style.background = 'none';
+    b.style.borderColor = 'var(--border)';
+  });
+  btn.style.background = '#1e1e1e';
+  btn.style.borderColor = 'var(--gold)';
+  await setDoc(doc(db,'users',uid()), { avatar }, { merge: true });
+  myProfile.avatar = avatar;
+  const el = document.getElementById('d-avatar-display');
+  if (el) el.textContent = avatar;
+  closeModal();
+};
+
+window.deskSaveName = async function() {
+  const name = (document.getElementById('d-profile-name')?.value || '').trim();
+  if (!name) return;
+  await setDoc(doc(db,'users',uid()), { name }, { merge: true });
+  myProfile.name = name;
+  const btn = document.querySelector('[onclick="deskSaveName()"]');
+  if (btn) { btn.textContent='✓'; btn.style.color='#4caf50'; setTimeout(()=>btn.style.color='',1500); }
+  document.getElementById('sb-username').textContent = name || myProfile.handle;
+};
+
+window.deskSaveHandle = async function() {
+  const newHandle = (document.getElementById('d-profile-handle')?.value || '').trim().toLowerCase();
+  const msgEl = document.getElementById('d-handle-msg');
+  msgEl.style.display = 'none';
+
+  if (!/^[a-z0-9_]{3,24}$/.test(newHandle)) {
+    msgEl.textContent = 'Только буквы (a-z), цифры и _. От 3 до 24 знаков.';
+    msgEl.style.color = '#d47373';
+    msgEl.style.display = 'block';
+    return;
+  }
+
+  if (newHandle === myProfile.handle) {
+    msgEl.textContent = 'Это уже твой текущий ник.';
+    msgEl.style.color = 'var(--dim)';
+    msgEl.style.display = 'block';
+    return;
+  }
+
+  // Проверить уникальность
+  const snapCheck = await getDocs(query(collection(db,'users'), where('handle','==',newHandle)));
+  if (!snapCheck.empty) {
+    msgEl.textContent = 'Этот никнейм уже занят.';
+    msgEl.style.color = '#d47373';
+    msgEl.style.display = 'block';
+    return;
+  }
+
+  await setDoc(doc(db,'users',uid()), { handle: newHandle }, { merge: true });
+  myProfile.handle = newHandle;
+  deskMyHandle = newHandle;
+  document.getElementById('sb-username').textContent = myProfile.name || newHandle;
+  msgEl.textContent = 'Никнейм обновлён!';
+  msgEl.style.color = '#4caf50';
+  msgEl.style.display = 'block';
+  setTimeout(() => { msgEl.style.display='none'; }, 2000);
+};
 
 window.addFriend = async function(){
   const inp=document.getElementById('pf-friend-input'); const msg=document.getElementById('pf-friend-msg');
