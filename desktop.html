@@ -1457,6 +1457,19 @@ async function renderProfilePanel(){
       <div id="pf-friend-msg" style="margin-top:6px;font-size:10px;font-family:var(--sans);display:none"></div>
     </div>
 
+    <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
+      <label class="m-lbl">ТЕМА ОФОРМЛЕНИЯ</label>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px">
+        ${S.THEMES.map(t => `
+          <button onclick="deskPickTheme('${t.id}')"
+            style="display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:1px solid ${(myProfile.themeId||'strategic')===t.id?'var(--gold)':'var(--border)'};border-radius:6px;padding:6px 4px;cursor:pointer;color:var(--text);font-size:8px;font-family:var(--mono)">
+            <span style="width:18px;height:18px;border-radius:50%;background:${t.bg};border:1px solid ${t.accent}"></span>
+            ${t.name}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+
     <div class="m-act" style="margin-top:14px;display:flex;gap:8px">
       <button class="btn-g" onclick="closeProfile()">Закрыть</button>
       <button class="btn-o" onclick="handleLogout()" style="margin-left:auto">Выйти</button>
@@ -2269,6 +2282,15 @@ function mpSelectEntry(entry) {
   mpGoTo('mp-editor');
 }
 
+window.deskPickTheme = async function(themeId) {
+  const theme = S.findThemeById(themeId);
+  S.applyTheme(theme);
+  await S.saveUserTheme(themeId);
+  myProfile.themeId = themeId;
+  closeProfile();
+  setTimeout(() => openProfile(), 300);
+};
+
 window.mpSaveEntry = async function() {
   const title = document.getElementById('mp-title-input').value.trim();
   const body = document.getElementById('mp-body-input').value.trim();
@@ -2305,6 +2327,8 @@ onAuthStateChanged(auth, async user => {
       document.getElementById('app').style.display='flex';
       document.getElementById('loading').style.display='flex';
       activeLineId=null;activeEntryId=null;
+      // Загружаем пользовательскую тему
+      S.loadUserTheme();
       startFirestoreListeners(user.uid);
       deskStartChatsListener();
       deskEnsureHandle();

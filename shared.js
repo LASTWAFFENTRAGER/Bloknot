@@ -21,6 +21,73 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// ── ТЕМЫ ОФОРМЛЕНИЯ ──
+const THEMES = [
+  { id: 'strategic',    name: 'Стратегический', bg: '#0F0F0F', text: '#E8E2D9', accent: '#C8A96E', isDark: true  },
+  { id: 'clean',        name: 'Чистый лист',    bg: '#F5F2EB', text: '#1E1E1E', accent: '#3B82F6', isDark: false },
+  { id: 'sepia',        name: 'Уютная тетрадь',  bg: '#EFE8D8', text: '#3A3128', accent: '#D4A373', isDark: false },
+  { id: 'cyber',        name: 'Кибер/Хай-тек',   bg: '#0A0A1A', text: '#E0E0FF', accent: '#00E5FF', isDark: true  },
+  { id: 'nature',       name: 'Зелёный рост',    bg: '#1A2F1D', text: '#D1E8D5', accent: '#8BC34A', isDark: true  },
+  { id: 'terminal',     name: 'Терминал',        bg: '#000000', text: '#00FF00', accent: '#00FF00', isDark: true  },
+  { id: 'pastel',       name: 'Нежный',          bg: '#2D222B', text: '#E4D5DB', accent: '#F4A261', isDark: true  },
+  { id: 'graphite',     name: 'Профессиональный', bg: '#1C1E22', text: '#CBD2D9', accent: '#6C8B9F', isDark: true  },
+  { id: 'terracotta',   name: 'Осенний',         bg: '#1F1A16', text: '#DAC5B3', accent: '#C87A4A', isDark: true  },
+  { id: 'lamp',         name: 'Ламповое чтение',  bg: '#181A1B', text: '#C3C9CD', accent: '#E5B567', isDark: true  }
+];
+
+function lighten(hex, pct) {
+  const num = parseInt(hex.replace('#',''),16);
+  const r = Math.min(255, (num>>16) + Math.floor(255*(pct/100)));
+  const g = Math.min(255, ((num>>8)&0xFF) + Math.floor(255*(pct/100)));
+  const b = Math.min(255, (num&0xFF) + Math.floor(255*(pct/100)));
+  return '#' + (r<<16|g<<8|b).toString(16).padStart(6,'0');
+}
+function darken(hex, pct) {
+  const num = parseInt(hex.replace('#',''),16);
+  const r = Math.max(0, (num>>16) - Math.floor(255*(pct/100)));
+  const g = Math.max(0, ((num>>8)&0xFF) - Math.floor(255*(pct/100)));
+  const b = Math.max(0, (num&0xFF) - Math.floor(255*(pct/100)));
+  return '#' + (r<<16|g<<8|b).toString(16).padStart(6,'0');
+}
+
+function applyTheme(theme) {
+  const root = document.documentElement;
+  const isDark = theme.isDark;
+
+  root.style.setProperty('--bg',    theme.bg);
+  root.style.setProperty('--bg2',   isDark ? lighten(theme.bg, 3) : darken(theme.bg, 3));
+  root.style.setProperty('--bg3',   isDark ? lighten(theme.bg, 8) : darken(theme.bg, 7));
+  root.style.setProperty('--bg4',   isDark ? lighten(theme.bg, 14) : darken(theme.bg, 12));
+  root.style.setProperty('--border', isDark ? lighten(theme.bg, 14) : darken(theme.bg, 12));
+  root.style.setProperty('--border2',isDark ? lighten(theme.bg, 20) : darken(theme.bg, 18));
+  root.style.setProperty('--gold',  theme.accent);
+  root.style.setProperty('--gold2', isDark ? lighten(theme.accent, -10) : darken(theme.accent, 10));
+  root.style.setProperty('--text',  theme.text);
+  root.style.setProperty('--muted', isDark ? darken(theme.text, 30) : lighten(theme.text, 40));
+  root.style.setProperty('--dim',   isDark ? darken(theme.text, 55) : lighten(theme.text, 65));
+}
+
+function findThemeById(id) {
+  return THEMES.find(t => t.id === id) || THEMES[0];
+}
+
+async function saveUserTheme(themeId) {
+  if (!uid()) return;
+  await setDoc(doc(db, 'users', uid()), { themeId }, { merge: true });
+}
+
+async function loadUserTheme() {
+  if (!uid()) return;
+  const snap = await getOne(doc(db, 'users', uid()));
+  const data = snap.exists() ? snap.data() : {};
+  const theme = findThemeById(data.themeId);
+  applyTheme(theme);
+  return theme;
+}
+
+// Применяем дефолтную тему сразу
+applyTheme(THEMES[0]);
+
 // ── КОНСТАНТЫ ──
 const ICONS  = ['💡','✈','🏦','☕','🏭','🌐','🚀','📚','💼','🎯','🔬','🎨','🏠','❤️','⚡','🌿'];
 const COLORS = ['#C8A96E','#7EB8A4','#E07B7B','#7BA7E0','#B07BE0','#E0B47B','#7BE0C8','#E07BB8','#A0E07B','#E0D47B'];
@@ -289,6 +356,8 @@ window._shared = {
   loadFriends, sendFriendRequest, respondFriendRequest,
   myRole, canWrite, canDelete, canManage,
   syncDot,
+  // Темы
+  THEMES, applyTheme, findThemeById, saveUserTheme, loadUserTheme,
   // Firestore функции
   collection, doc, onSnapshot, setDoc, deleteDoc, serverTimestamp,
   getDocs, query, where, updateDoc, arrayUnion, arrayRemove, getOne, addDoc,
