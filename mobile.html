@@ -561,6 +561,40 @@
       border-color: #c9a84c;
       background: #1a1a0a;
     }
+
+    .friend-item {
+      display: flex;
+      align-items: center;
+      padding: 11px 14px;
+      border-bottom: 1px solid #111;
+      gap: 10px;
+    }
+    .friend-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #c9a84c;
+      flex-shrink: 0;
+    }
+    .friend-name { flex: 1; font-size: 13px; color: #ccc; }
+    .friend-action-btn {
+      background: none;
+      border: 1px solid #2a2a2a;
+      border-radius: 4px;
+      color: #c9a84c;
+      font-size: 11px;
+      padding: 4px 8px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .friend-action-btn.accept { border-color: #2a4a2a; color: #4caf50; }
+    .friend-action-btn.reject { border-color: #4a2a2a; color: #c0392b; }
   </style>
 </head>
 <body>
@@ -696,15 +730,41 @@
     <div class="screen" id="screen-people">
       <div class="screen-header">
         <span class="screen-title">Люди</span>
-        <button class="btn-icon" onclick="openNewChat()" title="Новый чат">✎</button>
       </div>
+
+      <!-- Поиск -->
       <div style="padding:10px 12px;border-bottom:1px solid #111">
         <input id="people-search" class="modal-input" style="margin:0"
-          type="text" placeholder="Поиск по нику (@handle)..."
+          type="text" placeholder="@никнейм или #12345678"
           oninput="searchUsers(this.value)">
       </div>
-      <div id="search-results" style="display:none;border-bottom:1px solid #111"></div>
+      <div id="search-results" style="display:none;border-bottom:1px solid #1a1a1a"></div>
+
+      <!-- Входящие заявки -->
+      <div id="mobile-incoming-section" style="display:none">
+        <div style="padding:8px 14px 4px;font-size:9px;color:#555;letter-spacing:0.1em">ВХОДЯЩИЕ ЗАЯВКИ</div>
+        <div id="mobile-incoming-list"></div>
+      </div>
+
+      <!-- Друзья -->
+      <div id="mobile-friends-section" style="display:none">
+        <div style="padding:8px 14px 4px;font-size:9px;color:#555;letter-spacing:0.1em">ДРУЗЬЯ</div>
+        <div id="mobile-friends-list"></div>
+      </div>
+
+      <!-- Чаты -->
+      <div style="padding:8px 14px 4px;font-size:9px;color:#555;letter-spacing:0.1em">ЧАТЫ</div>
       <div class="list-body" id="chats-list"></div>
+
+      <!-- Кнопка новый чат -->
+      <button onclick="openNewChat()"
+        style="position:fixed;bottom:24px;right:16px;
+        width:52px;height:52px;border-radius:12px;
+        background:#c9a84c;border:none;
+        display:flex;align-items:center;justify-content:center;
+        font-size:28px;color:#000;font-weight:300;
+        cursor:pointer;z-index:200;
+        box-shadow:0 4px 16px rgba(201,168,76,0.4)">+</button>
     </div>
 
     <!-- ЛЮДИ: чат -->
@@ -927,7 +987,7 @@ window.switchTab = function(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   if (tab === 'personal') { goTo('screen-lines'); }
   else if (tab === 'shared') { goTo('screen-shared'); renderSharedLines(); }
-  else if (tab === 'people') { goTo('screen-people'); renderChats(); }
+  else if (tab === 'people') { goTo('screen-people'); renderChats(); renderMobileFriends(); }
   else if (tab === 'ai') { goTo('screen-ai'); }
   else if (tab === 'profile') { goTo('screen-profile'); loadProfile(); }
 };
@@ -1520,27 +1580,95 @@ function renderChats() {
   if (!list) return;
   list.innerHTML = '';
   if (chats.length === 0) {
-    list.innerHTML = '<div class="list-empty">Нет чатов.<br>Найди человека по нику и начни общение.</div>';
-    return;
+    list.innerHTML = '<div class="list-empty">Нет чатов.<br>Найди человека выше.</div>';
+  } else {
+    chats.forEach(chat => {
+      const otherUid = (chat.members || []).find(m => m !== currentUser.uid);
+      const otherHandle = (chat.memberHandles || {})[otherUid] || '?';
+      const el = document.createElement('div');
+      el.className = 'chat-item';
+      const lastTime = chat.lastAt ? formatTime(chat.lastAt.seconds * 1000) : '';
+      el.innerHTML = `
+        <div class="chat-avatar">${otherHandle[0]?.toUpperCase()}</div>
+        <div class="chat-info">
+          <div class="chat-name">@${otherHandle}</div>
+          <div class="chat-last">${chat.lastMessage || 'Нет сообщений'}</div>
+        </div>
+        <div class="chat-time">${lastTime}</div>
+      `;
+      el.onclick = () => openChat(chat, otherHandle);
+      list.appendChild(el);
+    });
   }
-  chats.forEach(chat => {
-    const otherUid = (chat.members || []).find(m => m !== currentUser.uid);
-    const otherHandle = (chat.memberHandles || {})[otherUid] || otherUid || '?';
-    const el = document.createElement('div');
-    el.className = 'chat-item';
-    const lastTime = chat.lastAt ? formatTime(chat.lastAt.seconds * 1000) : '';
-    el.innerHTML = `
-      <div class="chat-avatar">${otherHandle[0]?.toUpperCase() || '?'}</div>
-      <div class="chat-info">
-        <div class="chat-name">@${otherHandle}</div>
-        <div class="chat-last">${chat.lastMessage || 'Нет сообщений'}</div>
-      </div>
-      <div class="chat-time">${lastTime}</div>
-    `;
-    el.onclick = () => openChat(chat, otherHandle);
-    list.appendChild(el);
-  });
+  renderMobileFriends();
 }
+
+async function renderMobileFriends() {
+  if (!currentUser) return;
+  const snap = await getDocs(collection(db, 'users', currentUser.uid, 'friends'));
+  const allFriends = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const incoming = allFriends.filter(f => f.status === 'incoming');
+  const accepted = allFriends.filter(f => f.status === 'accepted')
+    .sort((a, b) => (a.handle || '').localeCompare(b.handle || ''));
+
+  // Входящие заявки
+  const incomingSection = document.getElementById('mobile-incoming-section');
+  const incomingList = document.getElementById('mobile-incoming-list');
+  if (incoming.length > 0) {
+    incomingSection.style.display = 'block';
+    incomingList.innerHTML = '';
+    incoming.forEach(f => {
+      const el = document.createElement('div');
+      el.className = 'friend-item';
+      el.innerHTML = `
+        <div class="friend-avatar">${(f.handle||'?')[0].toUpperCase()}</div>
+        <div class="friend-name">@${f.handle || f.id}</div>
+        <button class="friend-action-btn accept"
+          onclick="mobileRespondFriend('${f.id}','accept')">✓</button>
+        <button class="friend-action-btn reject"
+          onclick="mobileRespondFriend('${f.id}','reject')">✗</button>
+      `;
+      incomingList.appendChild(el);
+    });
+  } else {
+    incomingSection.style.display = 'none';
+  }
+
+  // Друзья
+  const friendsSection = document.getElementById('mobile-friends-section');
+  const friendsList = document.getElementById('mobile-friends-list');
+  if (accepted.length > 0) {
+    friendsSection.style.display = 'block';
+    friendsList.innerHTML = '';
+    accepted.forEach(f => {
+      const el = document.createElement('div');
+      el.className = 'friend-item';
+      el.innerHTML = `
+        <div class="friend-avatar">${(f.handle||'?')[0].toUpperCase()}</div>
+        <div class="friend-name">@${f.handle || f.id}</div>
+        <button class="friend-action-btn"
+          onclick="startChatWithHandle('${f.handle}')">💬</button>
+      `;
+      friendsList.appendChild(el);
+    });
+  } else {
+    friendsSection.style.display = 'none';
+  }
+}
+
+window.mobileRespondFriend = async function(friendUid, action) {
+  if (action === 'accept') {
+    await setDoc(doc(db, 'users', currentUser.uid, 'friends', friendUid),
+      { status: 'accepted' }, { merge: true });
+    await setDoc(doc(db, 'users', friendUid, 'friends', currentUser.uid),
+      { status: 'accepted' }, { merge: true });
+  } else {
+    await deleteDoc(doc(db, 'users', currentUser.uid, 'friends', friendUid));
+    await deleteDoc(doc(db, 'users', friendUid, 'friends', currentUser.uid));
+  }
+  renderMobileFriends();
+};
 
 function formatTime(ms) {
   const d = new Date(ms);
@@ -1614,10 +1742,14 @@ window.sendMessage = async function() {
 };
 
 window.openNewChat = async function() {
-  const handle = prompt('Введи ник пользователя (@handle):');
-  if (!handle) return;
-  const cleanHandle = handle.replace('@', '').toLowerCase().trim();
-  await startChatWithHandle(cleanHandle);
+  const searchInput = document.getElementById('people-search');
+  if (searchInput) {
+    searchInput.focus();
+    searchInput.placeholder = 'Введи @никнейм или #ID для нового чата...';
+    setTimeout(() => {
+      searchInput.placeholder = '@никнейм или #12345678';
+    }, 3000);
+  }
 };
 
 window.searchUsers = async function(val) {

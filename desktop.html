@@ -746,6 +746,39 @@ html, body {
   padding: 4px 0;
   font-style: italic;
 }
+
+.d-friend-item {
+  display: flex;
+  align-items: center;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+.d-friend-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+.d-friend-name { flex: 1; font-size: 12px; color: var(--text); }
+.d-fa-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  color: var(--gold);
+  font-size: 10px;
+  padding: 3px 7px;
+  cursor: pointer;
+}
+.d-fa-btn.accept { border-color: #2a4a2a; color: #4caf50; }
+.d-fa-btn.reject { border-color: #4a2a2a; color: #c0392b; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
 </head>
@@ -1745,6 +1778,7 @@ window.switchDesktopMode = function(mode) {
   } else if (mode === 'people') {
     panelPeople.classList.add('active');
     deskRenderChats();
+    deskRenderFriends();
   } else if (mode === 'ai') {
     panelAi.classList.add('active');
   }
@@ -1832,7 +1866,75 @@ function deskOpenChat(chat, otherHandle) {
     }
   );
   deskRenderChats();
+  deskRenderFriends();
 }
+
+async function deskRenderFriends() {
+  if (!uid()) return;
+  const snap = await getDocs(collection(db, 'users', uid(), 'friends'));
+  const allFriends = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const incoming = allFriends.filter(f => f.status === 'incoming');
+  const accepted = allFriends.filter(f => f.status === 'accepted')
+    .sort((a, b) => (a.handle || '').localeCompare(b.handle || ''));
+
+  // Входящие заявки
+  const incomingSection = document.getElementById('d-incoming-section');
+  const incomingList = document.getElementById('d-incoming-list');
+  if (incomingSection && incoming.length > 0) {
+    incomingSection.style.display = 'block';
+    incomingList.innerHTML = '';
+    incoming.forEach(f => {
+      const el = document.createElement('div');
+      el.className = 'd-friend-item';
+      el.innerHTML = `
+        <div class="d-friend-avatar">${(f.handle||'?')[0].toUpperCase()}</div>
+        <div class="d-friend-name">@${f.handle || f.id}</div>
+        <button class="d-fa-btn accept"
+          onclick="deskRespondFriend('${f.id}','accept')">✓</button>
+        <button class="d-fa-btn reject"
+          onclick="deskRespondFriend('${f.id}','reject')">✗</button>
+      `;
+      incomingList.appendChild(el);
+    });
+  } else if (incomingSection) {
+    incomingSection.style.display = 'none';
+  }
+
+  // Друзья
+  const friendsSection = document.getElementById('d-friends-section');
+  const friendsList = document.getElementById('d-friends-list');
+  if (friendsSection && accepted.length > 0) {
+    friendsSection.style.display = 'block';
+    friendsList.innerHTML = '';
+    accepted.forEach(f => {
+      const el = document.createElement('div');
+      el.className = 'd-friend-item';
+      el.innerHTML = `
+        <div class="d-friend-avatar">${(f.handle||'?')[0].toUpperCase()}</div>
+        <div class="d-friend-name">@${f.handle || f.id}</div>
+        <button class="d-fa-btn"
+          onclick="deskStartChatWith('${f.handle}')">💬</button>
+      `;
+      friendsList.appendChild(el);
+    });
+  } else if (friendsSection) {
+    friendsSection.style.display = 'none';
+  }
+}
+
+window.deskRespondFriend = async function(friendUid, action) {
+  if (action === 'accept') {
+    await setDoc(doc(db,'users',uid(),'friends',friendUid),
+      { status:'accepted' }, { merge: true });
+    await setDoc(doc(db,'users',friendUid,'friends',uid()),
+      { status:'accepted' }, { merge: true });
+  } else {
+    await deleteDoc(doc(db,'users',uid(),'friends',friendUid));
+    await deleteDoc(doc(db,'users',friendUid,'friends',uid()));
+  }
+  deskRenderFriends();
+};
 
 function deskRenderMessages(msgs) {
   const list = document.getElementById('d-messages-list');
@@ -1869,9 +1971,12 @@ window.deskSendMessage = async function() {
 };
 
 window.deskOpenNewChat = async function() {
-  const handle = prompt('Введи ник пользователя (@handle):');
-  if (!handle) return;
-  await deskStartChatWith(handle.replace('@', '').toLowerCase().trim());
+  const input = document.getElementById('d-people-search');
+  if (input) {
+    input.focus();
+    input.placeholder = 'Введи @никнейм или #ID...';
+    setTimeout(() => { input.placeholder = '@никнейм или #12345678'; }, 3000);
+  }
 };
 
 window.deskSearchUsers = async function(val) {
