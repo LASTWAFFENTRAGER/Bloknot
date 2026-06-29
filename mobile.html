@@ -34,7 +34,6 @@
       align-items: center;
       z-index: 100;
     }
-
     .sidebar-logo {
       width: 56px;
       height: 56px;
@@ -46,14 +45,12 @@
       border-bottom: 1px solid #1a1a1a;
       flex-shrink: 0;
     }
-
     .sidebar-tabs {
       display: flex;
       flex-direction: column;
       flex: 1;
       width: 100%;
     }
-
     .tab-btn {
       width: 100%;
       height: 60px;
@@ -69,12 +66,10 @@
       transition: color 0.2s;
       flex-shrink: 0;
     }
-
     .tab-btn .icon { font-size: 20px; }
     .tab-btn .label { font-size: 8px; letter-spacing: 0.05em; text-transform: uppercase; }
     .tab-btn.active { color: #c9a84c; }
     .tab-btn:active { opacity: 0.7; }
-
     .sidebar-profile {
       margin-top: auto;
       border-top: 1px solid #1a1a1a;
@@ -88,7 +83,6 @@
       overflow: hidden;
       position: relative;
     }
-
     .screen {
       position: absolute;
       inset: 0;
@@ -97,7 +91,6 @@
       background: #0d0d0d;
       overflow: hidden;
     }
-
     .screen.active { display: flex; }
 
     /* ── ШАПКА ЭКРАНА ── */
@@ -111,7 +104,6 @@
       background: #0a0a0a;
       border-bottom: 1px solid #1a1a1a;
     }
-
     .screen-title {
       flex: 1;
       font-size: 13px;
@@ -119,7 +111,6 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
-
     .btn-back {
       background: none;
       border: none;
@@ -129,7 +120,6 @@
       padding: 4px;
       line-height: 1;
     }
-
     .btn-icon {
       background: none;
       border: 1px solid #2a2a2a;
@@ -150,7 +140,6 @@
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
-
     .list-empty {
       padding: 40px 20px;
       text-align: center;
@@ -158,7 +147,6 @@
       font-size: 13px;
       line-height: 1.8;
     }
-
     .line-item {
       display: flex;
       align-items: center;
@@ -169,7 +157,6 @@
       -webkit-user-select: none;
       user-select: none;
     }
-
     .line-item:active { background: #111; }
     .line-item-icon { font-size: 20px; flex-shrink: 0; }
     .line-item-name { flex: 1; font-size: 14px; color: #ccc; }
@@ -182,7 +169,6 @@
       -webkit-user-select: none;
       user-select: none;
     }
-
     .entry-item:active { background: #111; }
     .entry-title { font-size: 14px; color: #ccc; margin-bottom: 4px; }
     .entry-preview { font-size: 11px; color: #3a3a3a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -198,7 +184,6 @@
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
-
     .editor-title-input {
       background: none;
       border: none;
@@ -210,7 +195,6 @@
       outline: none;
       width: 100%;
     }
-
     .editor-body-input {
       background: none;
       border: none;
@@ -235,7 +219,6 @@
       gap: 12px;
       color: #2a2a2a;
     }
-
     .screen-placeholder .ph-icon { font-size: 52px; }
     .screen-placeholder .ph-title { font-size: 14px; color: #333; }
     .screen-placeholder .ph-sub { font-size: 11px; color: #222; }
@@ -250,9 +233,7 @@
       align-items: center;
       justify-content: center;
     }
-
     #modal-overlay.open { display: flex; }
-
     .modal-box {
       background: #111;
       border: 1px solid #2a2a2a;
@@ -262,7 +243,6 @@
       max-width: 360px;
       z-index: 10000;
     }
-
     .modal-title {
       font-size: 13px;
       color: #888;
@@ -270,7 +250,6 @@
       text-transform: uppercase;
       margin-bottom: 16px;
     }
-
     .modal-input {
       width: 100%;
       background: #0a0a0a;
@@ -283,16 +262,13 @@
       outline: none;
       margin-bottom: 12px;
     }
-
     .modal-input:focus { border-color: #c9a84c; }
-
     .modal-actions {
       display: flex;
       gap: 8px;
       justify-content: flex-end;
       margin-top: 16px;
     }
-
     .btn-cancel {
       background: none;
       border: 1px solid #2a2a2a;
@@ -303,7 +279,6 @@
       border-radius: 6px;
       cursor: pointer;
     }
-
     .btn-confirm {
       background: #c9a84c;
       border: none;
@@ -427,7 +402,6 @@
       padding: 4px;
       display: none;
     }
-
     .msg-bubble {
       max-width: 75%;
       padding: 8px 12px;
@@ -436,7 +410,6 @@
       line-height: 1.5;
       word-break: break-word;
     }
-
     .msg-out {
       align-self: flex-end;
       background: #1a1a0a;
@@ -444,7 +417,6 @@
       color: #c9a84c;
       border-bottom-right-radius: 3px;
     }
-
     .msg-in {
       align-self: flex-start;
       background: #0f0f0f;
@@ -452,20 +424,17 @@
       color: #ccc;
       border-bottom-left-radius: 3px;
     }
-
     .msg-time {
       font-size: 9px;
       color: #333;
       margin-top: 2px;
       text-align: right;
     }
-
     .msg-sender {
       font-size: 9px;
       color: #555;
       margin-bottom: 2px;
     }
-
     .chat-item {
       display: flex;
       align-items: center;
@@ -474,9 +443,7 @@
       cursor: pointer;
       gap: 12px;
     }
-
     .chat-item:active { background: #111; }
-
     .chat-avatar {
       width: 40px;
       height: 40px;
@@ -490,12 +457,10 @@
       flex-shrink: 0;
       color: #c9a84c;
     }
-
     .chat-info { flex: 1; min-width: 0; }
     .chat-name { font-size: 14px; color: #ccc; margin-bottom: 2px; }
     .chat-last { font-size: 11px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .chat-time { font-size: 10px; color: #2a2a2a; flex-shrink: 0; }
-
     .user-result-item {
       display: flex;
       align-items: center;
@@ -504,9 +469,7 @@
       cursor: pointer;
       border-bottom: 1px solid #111;
     }
-
     .user-result-item:active { background: #111; }
-
     .mobile-ai-user {
       align-self: flex-end;
       max-width: 78%;
@@ -520,7 +483,6 @@
       line-height: 1.6;
       word-break: break-word;
     }
-
     .mobile-ai-bot {
       align-self: flex-start;
       max-width: 85%;
@@ -535,7 +497,6 @@
       word-break: break-word;
       white-space: pre-wrap;
     }
-
     .mobile-ai-thinking {
       align-self: flex-start;
       font-size: 11px;
@@ -543,7 +504,6 @@
       font-style: italic;
       padding: 4px 0;
     }
-
     .avatar-option {
       font-size: 28px;
       width: 48px;
@@ -561,7 +521,6 @@
       border-color: #c9a84c;
       background: #1a1a0a;
     }
-
     .friend-item {
       display: flex;
       align-items: center;
@@ -681,7 +640,6 @@
       <div class="editor-body">
         <input id="editor-title" type="text" class="editor-title-input" placeholder="Заголовок...">
         <textarea id="editor-body" class="editor-body-input" placeholder="Текст записи..."></textarea>
-
         <div style="border-top:1px solid #1a1a1a;margin-top:12px;padding-top:12px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <span style="font-size:10px;color:#333;letter-spacing:0.1em">ЧЕРНОВИКИ</span>
@@ -731,8 +689,6 @@
       <div class="screen-header">
         <span class="screen-title">Люди</span>
       </div>
-
-      <!-- Поиск -->
       <div style="padding:10px 12px;border-bottom:1px solid #111">
         <input id="people-search" class="modal-input" style="margin:0"
           type="text" placeholder="@никнейм или #12345678"
@@ -740,23 +696,19 @@
       </div>
       <div id="search-results" style="display:none;border-bottom:1px solid #1a1a1a"></div>
 
-      <!-- Входящие заявки -->
       <div id="mobile-incoming-section" style="display:none">
         <div style="padding:8px 14px 4px;font-size:9px;color:#555;letter-spacing:0.1em">ВХОДЯЩИЕ ЗАЯВКИ</div>
         <div id="mobile-incoming-list"></div>
       </div>
 
-      <!-- Друзья -->
       <div id="mobile-friends-section" style="display:none">
         <div style="padding:8px 14px 4px;font-size:9px;color:#555;letter-spacing:0.1em">ДРУЗЬЯ</div>
         <div id="mobile-friends-list"></div>
       </div>
 
-      <!-- Чаты -->
       <div style="padding:8px 14px 4px;font-size:9px;color:#555;letter-spacing:0.1em">ЧАТЫ</div>
       <div class="list-body" id="chats-list"></div>
 
-      <!-- Кнопка новый чат -->
       <button onclick="openNewChat()"
         style="position:fixed;bottom:24px;right:16px;
         width:52px;height:52px;border-radius:12px;
@@ -904,29 +856,17 @@
   </div>
 </div>
 
+<!-- ПОДКЛЮЧАЕМ ОБЩИЙ МОДУЛЬ -->
+<script type="module" src="./shared.js"></script>
+
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as fbSignOut }
-  from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
-import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy, getDoc, where, getDocs }
-  from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
+// ── ИСПОЛЬЗУЕМ ОБЩИЙ МОДУЛЬ ──
+const S = window._shared;
+const auth = S.auth;
+const db = S.db;
 
-// ── FIREBASE CONFIG ──
-const app = initializeApp({
-  apiKey:            "AIzaSyC8q_pr3kIOlb9UEKbxhAuKu9vz6vfQosw",
-  authDomain:        "project-id-6ca36.firebaseapp.com",
-  projectId:         "project-id-6ca36",
-  storageBucket:     "project-id-6ca36.firebasestorage.app",
-  messagingSenderId: "57707102531",
-  appId:             "1:57707102531:web:5c279fb59d7b46c90baff6"
-});
-
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// ── СОСТОЯНИЕ ──
+// ── ЛОКАЛЬНОЕ СОСТОЯНИЕ ──
 let currentUser = null;
-let authMode = 'login';
 let lines = [];
 let entries = {};
 let activeLine = null;
@@ -968,7 +908,6 @@ function goBack(id) {
     renderChats();
   }
 }
-
 window.goBack = goBack;
 
 // Системная кнопка назад Android
@@ -1006,15 +945,15 @@ function renderLines() {
     el.className = 'line-item';
     el.innerHTML = `
       <span class="line-item-icon">${line.icon || '💡'}</span>
-      <span class="line-item-name">${line.name}</span>
+      <span class="line-item-name">${S.esc(line.name)}</span>
       <span class="line-item-count">${count}</span>
     `;
     el.onclick = () => selectLine(line);
     addLongPress(el, () => {
       if (confirm(`Удалить линию "${line.name}"?`)) {
-        deleteDoc(doc(db, 'users', currentUser.uid, 'lines', line.id));
+        deleteDoc(S.doc(db, 'users', currentUser.uid, 'lines', line.id));
         (entries[line.id] || []).forEach(e =>
-          deleteDoc(doc(db, 'users', currentUser.uid, 'entries', e.id))
+          deleteDoc(S.doc(db, 'users', currentUser.uid, 'entries', e.id))
         );
       }
     });
@@ -1047,13 +986,13 @@ function renderEntries() {
     el.className = 'entry-item';
     const preview = (entry.body || '').replace(/\n/g, ' ').slice(0, 80);
     el.innerHTML = `
-      <div class="entry-title">${entry.title || 'Без заголовка'}</div>
-      ${preview ? `<div class="entry-preview">${preview}</div>` : ''}
+      <div class="entry-title">${S.esc(entry.title || 'Без заголовка')}</div>
+      ${preview ? `<div class="entry-preview">${S.esc(preview)}</div>` : ''}
     `;
     el.onclick = () => selectEntry(entry);
     addLongPress(el, () => {
       if (confirm(`Удалить запись "${entry.title || 'Без заголовка'}"?`)) {
-        deleteDoc(doc(db, 'users', currentUser.uid, 'entries', entry.id));
+        deleteDoc(S.doc(db, 'users', currentUser.uid, 'entries', entry.id));
         renderEntries();
       }
     });
@@ -1088,7 +1027,7 @@ function renderDrafts(entryId) {
     const el = document.createElement('div');
     el.style.cssText = 'background:#0a0a0a;border:1px solid #1a1a1a;border-radius:6px;padding:10px;margin-bottom:8px;position:relative';
     el.innerHTML = `
-      <div style="font-size:12px;color:#777;line-height:1.6">${d.text || ''}</div>
+      <div style="font-size:12px;color:#777;line-height:1.6">${S.esc(d.text || '')}</div>
       <button onclick="deleteDraft('${d.id}')"
         style="position:absolute;top:6px;right:6px;background:none;border:none;color:#333;font-size:14px;cursor:pointer">✕</button>
     `;
@@ -1099,22 +1038,22 @@ function renderDrafts(entryId) {
 window.addDraft = function() {
   openModal('Новый черновик', 'Текст черновика...', async (text) => {
     if (!activeEntry || !currentUser) return;
-    await addDoc(
-      collection(db, 'users', currentUser.uid, 'entries', activeEntry.id, 'drafts'),
-      { text, createdAt: serverTimestamp() }
+    await S.addDoc(
+      S.collection(db, 'users', currentUser.uid, 'entries', activeEntry.id, 'drafts'),
+      { text, createdAt: S.serverTimestamp() }
     );
   });
 };
 
 window.deleteDraft = async function(draftId) {
   if (!activeEntry || !currentUser) return;
-  await deleteDoc(doc(db, 'users', currentUser.uid, 'entries', activeEntry.id, 'drafts', draftId));
+  await deleteDoc(S.doc(db, 'users', currentUser.uid, 'entries', activeEntry.id, 'drafts', draftId));
 };
 
 function startDraftListener(entryId) {
   if (window._draftUnsub) window._draftUnsub();
-  window._draftUnsub = onSnapshot(
-    collection(db, 'users', currentUser.uid, 'entries', entryId, 'drafts'),
+  window._draftUnsub = S.onSnapshot(
+    S.collection(db, 'users', currentUser.uid, 'entries', entryId, 'drafts'),
     snap => {
       drafts[entryId] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderDrafts(entryId);
@@ -1127,7 +1066,7 @@ window.deleteCurrentEntry = async function() {
   if (!activeEntry || !currentUser) return;
   if (!confirm('Удалить запись?')) return;
   if (window._draftUnsub) window._draftUnsub();
-  await deleteDoc(doc(db, 'users', currentUser.uid, 'entries', activeEntry.id));
+  await deleteDoc(S.doc(db, 'users', currentUser.uid, 'entries', activeEntry.id));
   activeEntry = null;
   goBack('screen-entries');
 };
@@ -1145,18 +1084,20 @@ function renderSharedLines() {
   sharedLines.forEach(line => {
     const count = (sharedEntries[line.id] || []).length;
     const isOwner = line.ownerId === currentUser?.uid;
+    const role = S.myRole(line);
+    const roleLabel = role === 'admin' ? 'владелец' : role === 'partner' ? 'пишет' : 'читает';
     const el = document.createElement('div');
     el.className = 'line-item';
     el.innerHTML = `
       <span class="line-item-icon">${line.icon || '🤝'}</span>
-      <span class="line-item-name">${line.name}</span>
-      <span class="line-item-count" style="color:#555">${isOwner ? 'владелец' : 'участник'} · ${count}</span>
+      <span class="line-item-name">${S.esc(line.name)}</span>
+      <span class="line-item-count" style="color:#555">${roleLabel} · ${count}</span>
     `;
     el.onclick = () => selectSharedLine(line);
     addLongPress(el, () => {
-      if (!isOwner) { alert('Только владелец может удалить линию'); return; }
+      if (!S.canManage(line)) { alert('Только владелец может удалить линию'); return; }
       if (confirm(`Удалить совместную линию "${line.name}"?`)) {
-        deleteDoc(doc(db, 'sharedLines', line.id));
+        deleteDoc(S.doc(db, 'sharedLines', line.id));
       }
     });
     list.appendChild(el);
@@ -1188,9 +1129,9 @@ function renderSharedEntries() {
     el.className = 'entry-item';
     const preview = (entry.body || '').replace(/\n/g, ' ').slice(0, 80);
     el.innerHTML = `
-      <div class="entry-title">${entry.title || 'Без заголовка'}</div>
-      ${preview ? `<div class="entry-preview">${preview}</div>` : ''}
-      <div class="entry-date" style="color:#2a5a2a;font-size:10px">${entry.authorEmail || ''}</div>
+      <div class="entry-title">${S.esc(entry.title || 'Без заголовка')}</div>
+      ${preview ? `<div class="entry-preview">${S.esc(preview)}</div>` : ''}
+      <div class="entry-date" style="color:#2a5a2a;font-size:10px">${S.esc(entry.authorEmail || '')}</div>
     `;
     el.onclick = () => selectSharedEntry(entry);
     list.appendChild(el);
@@ -1198,6 +1139,11 @@ function renderSharedEntries() {
 }
 
 function selectSharedEntry(entry) {
+  // Проверка прав на запись
+  if (!S.canWrite(activeSharedLine)) {
+    alert('У вас нет прав на редактирование записей в этой линии.');
+    return;
+  }
   activeSharedEntry = entry;
   document.getElementById('shared-editor-title-input').value = entry.title || '';
   document.getElementById('shared-editor-body').value = entry.body || '';
@@ -1213,7 +1159,7 @@ function renderSharedMembers() {
   const members = activeSharedLine.members || {};
   const owner = activeSharedLine.ownerId;
   let html = '';
-  if (owner) html += `<div style="margin-bottom:4px">👑 ${activeSharedLine.ownerEmail || owner} — владелец</div>`;
+  if (owner) html += `<div style="margin-bottom:4px">👑 ${S.esc(activeSharedLine.ownerEmail || owner)} — владелец</div>`;
   Object.entries(members).forEach(([uid, role]) => {
     const roleLabel = role === 'admin' ? 'администратор' : role === 'partner' ? 'партнёр' : 'читатель';
     html += `<div style="margin-bottom:4px">👤 ${uid} — ${roleLabel}</div>`;
@@ -1222,22 +1168,27 @@ function renderSharedMembers() {
 }
 
 window.saveSharedEntry = async function() {
+  // Проверка прав на запись
+  if (!S.canWrite(activeSharedLine)) {
+    alert('У вас нет прав на сохранение записей в этой линии.');
+    return;
+  }
   const title = document.getElementById('shared-editor-title-input').value.trim();
   const body = document.getElementById('shared-editor-body').value.trim();
   if (!title && !body) return;
   if (!activeSharedLine || !currentUser) return;
 
   if (activeSharedEntry) {
-    await setDoc(
-      doc(db, 'sharedLines', activeSharedLine.id, 'entries', activeSharedEntry.id),
-      { title, body, updatedAt: serverTimestamp(), authorEmail: currentUser.email },
+    await S.setDoc(
+      S.doc(db, 'sharedLines', activeSharedLine.id, 'entries', activeSharedEntry.id),
+      { title, body, updatedAt: S.serverTimestamp(), authorEmail: currentUser.email },
       { merge: true }
     );
   } else {
-    await addDoc(
-      collection(db, 'sharedLines', activeSharedLine.id, 'entries'),
+    await S.addDoc(
+      S.collection(db, 'sharedLines', activeSharedLine.id, 'entries'),
       { title, body, lineId: activeSharedLine.id, authorEmail: currentUser.email,
-        createdAt: serverTimestamp(), updatedAt: serverTimestamp() }
+        createdAt: S.serverTimestamp(), updatedAt: S.serverTimestamp() }
     );
   }
   goBack('screen-shared-entries');
@@ -1245,6 +1196,10 @@ window.saveSharedEntry = async function() {
 
 window.openNewSharedEntry = function() {
   if (!activeSharedLine) return;
+  if (!S.canWrite(activeSharedLine)) {
+    alert('У вас нет прав на создание записей в этой линии.');
+    return;
+  }
   activeSharedEntry = null;
   document.getElementById('shared-editor-title-input').value = '';
   document.getElementById('shared-editor-body').value = '';
@@ -1256,13 +1211,13 @@ window.openNewSharedEntry = function() {
 window.openNewSharedLine = function() {
   openIconModal(async (name, icon) => {
     if (!name || !currentUser) return;
-    const lineRef = doc(collection(db, 'sharedLines'));
-    await setDoc(lineRef, {
+    const lineRef = S.doc(S.collection(db, 'sharedLines'));
+    await S.setDoc(lineRef, {
       name, icon,
       ownerId: currentUser.uid,
       ownerEmail: currentUser.email,
       members: {},
-      createdAt: serverTimestamp()
+      createdAt: S.serverTimestamp()
     });
   });
 };
@@ -1281,13 +1236,13 @@ function addLongPress(el, callback) {
 window.openNewLine = function() {
   openIconModal(async (name, icon) => {
     if (!name || !currentUser) return;
-    await addDoc(collection(db, 'users', currentUser.uid, 'lines'), {
-      name, icon, order: lines.length, createdAt: serverTimestamp()
+    await S.addDoc(S.collection(db, 'users', currentUser.uid, 'lines'), {
+      name, icon, order: lines.length, createdAt: S.serverTimestamp()
     });
   });
 };
 
-const ICONS = ['💡','✈','🏦','☕','🏭','🌐','🚀','📚','💼','🎯','🔬','🎨','🏠','❤️','⚡','🌿'];
+const ICONS = S.ICONS;
 
 function openIconModal(callback) {
   let selectedIcon = '💡';
@@ -1390,11 +1345,11 @@ window.saveCurrentEntry = async function() {
   if (!activeLine || !currentUser) return;
 
   if (activeEntry) {
-    await setDoc(doc(db, 'users', currentUser.uid, 'entries', activeEntry.id),
-      { title, body, lineId: activeLine.id, updatedAt: serverTimestamp() }, { merge: true });
+    await S.setDoc(S.doc(db, 'users', currentUser.uid, 'entries', activeEntry.id),
+      { title, body, lineId: activeLine.id, updatedAt: S.serverTimestamp() }, { merge: true });
   } else {
-    await addDoc(collection(db, 'users', currentUser.uid, 'entries'), {
-      title, body, lineId: activeLine.id, createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    await S.addDoc(S.collection(db, 'users', currentUser.uid, 'entries'), {
+      title, body, lineId: activeLine.id, createdAt: S.serverTimestamp(), updatedAt: S.serverTimestamp()
     });
   }
   goBack('screen-entries');
@@ -1405,12 +1360,12 @@ function startListeners(uid) {
   unsubs.forEach(u => u());
   unsubs = [];
 
-  unsubs.push(onSnapshot(collection(db, 'users', uid, 'lines'), snap => {
+  unsubs.push(S.onSnapshot(S.collection(db, 'users', uid, 'lines'), snap => {
     lines = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.order || 0) - (b.order || 0));
     renderLines();
   }));
 
-  unsubs.push(onSnapshot(collection(db, 'users', uid, 'entries'), snap => {
+  unsubs.push(S.onSnapshot(S.collection(db, 'users', uid, 'entries'), snap => {
     entries = {};
     snap.docs.forEach(d => {
       const e = { id: d.id, ...d.data() };
@@ -1422,7 +1377,7 @@ function startListeners(uid) {
     document.getElementById('loading').style.display = 'none';
   }));
 
-  unsubs.push(onSnapshot(collection(db, 'sharedLines'), snap => {
+  unsubs.push(S.onSnapshot(S.collection(db, 'sharedLines'), snap => {
     sharedLines = [];
     snap.docs.forEach(d => {
       const sl = { id: d.id, ...d.data() };
@@ -1435,8 +1390,8 @@ function startListeners(uid) {
     unsubSharedEntries.forEach(u => u());
     unsubSharedEntries = [];
     sharedLines.forEach(sl => {
-      const u = onSnapshot(
-        collection(db, 'sharedLines', sl.id, 'entries'),
+      const u = S.onSnapshot(
+        S.collection(db, 'sharedLines', sl.id, 'entries'),
         snap2 => {
           sharedEntries[sl.id] = snap2.docs.map(d => ({ id: d.id, ...d.data() }));
           renderSharedLines();
@@ -1488,12 +1443,11 @@ document.getElementById('modal-overlay').addEventListener('click', e => {
 
 async function ensureMyHandle() {
   if (myHandle) return myHandle;
-  const snap = await getDoc(doc(db, 'users', currentUser.uid));
+  const snap = await S.getOne(S.doc(db, 'users', currentUser.uid));
   if (snap.exists() && snap.data().handle) {
     myHandle = snap.data().handle;
     return myHandle;
   }
-  // Профиля нет — показать экран создания ника
   showHandleScreen();
   return null;
 }
@@ -1534,7 +1488,7 @@ window.submitMobileHandle = async function() {
   input.disabled = true;
 
   // Проверить уникальность handle
-  const snapHandle = await getDocs(query(collection(db, 'users'), where('handle', '==', handle)));
+  const snapHandle = await S.getDocs(S.query(S.collection(db, 'users'), S.where('handle', '==', handle)));
   if (!snapHandle.empty) {
     errEl.textContent = 'Этот никнейм уже занят. Выбери другой.';
     errEl.style.display = 'block';
@@ -1542,16 +1496,11 @@ window.submitMobileHandle = async function() {
     return;
   }
 
-  // Сгенерировать уникальный numericId
-  let numericId;
-  for (let i = 0; i < 10; i++) {
-    numericId = Math.floor(10000000 + Math.random() * 90000000);
-    const snapId = await getDocs(query(collection(db, 'users'), where('numericId', '==', numericId)));
-    if (snapId.empty) break;
-  }
+  // Генерировать уникальный numericId (6 цифр — единый формат)
+  const numericId = await S.ensureUniqueNumericId();
 
-  // Сохранить в users/{uid} — единый путь для десктопа и мобилки
-  await setDoc(doc(db, 'users', currentUser.uid), {
+  // Сохранить в users/{uid}
+  await S.setDoc(S.doc(db, 'users', currentUser.uid), {
     handle,
     email: currentUser.email,
     uid: currentUser.uid,
@@ -1565,7 +1514,7 @@ window.submitMobileHandle = async function() {
 };
 
 function startChatsListener(uid) {
-  unsubs.push(onSnapshot(collection(db, 'chats'), snap => {
+  unsubs.push(S.onSnapshot(S.collection(db, 'chats'), snap => {
     chats = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
       .filter(c => (c.members || []).includes(uid))
@@ -1586,12 +1535,12 @@ function renderChats() {
       const otherHandle = (chat.memberHandles || {})[otherUid] || '?';
       const el = document.createElement('div');
       el.className = 'chat-item';
-      const lastTime = chat.lastAt ? formatTime(chat.lastAt.seconds * 1000) : '';
+      const lastTime = chat.lastAt ? S.formatTime(chat.lastAt.seconds * 1000) : '';
       el.innerHTML = `
-        <div class="chat-avatar">${otherHandle[0]?.toUpperCase()}</div>
+        <div class="chat-avatar">${S.esc(otherHandle[0]?.toUpperCase())}</div>
         <div class="chat-info">
-          <div class="chat-name">@${otherHandle}</div>
-          <div class="chat-last">${chat.lastMessage || 'Нет сообщений'}</div>
+          <div class="chat-name">@${S.esc(otherHandle)}</div>
+          <div class="chat-last">${S.esc(chat.lastMessage || 'Нет сообщений')}</div>
         </div>
         <div class="chat-time">${lastTime}</div>
       `;
@@ -1604,7 +1553,7 @@ function renderChats() {
 
 async function renderMobileFriends() {
   if (!currentUser) return;
-  const snap = await getDocs(collection(db, 'users', currentUser.uid, 'friends'));
+  const snap = await S.getDocs(S.collection(db, 'users', currentUser.uid, 'friends'));
   const allFriends = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   const incoming = allFriends.filter(f => f.status === 'incoming');
@@ -1622,7 +1571,7 @@ async function renderMobileFriends() {
       el.className = 'friend-item';
       el.innerHTML = `
         <div class="friend-avatar">${(f.handle||'?')[0].toUpperCase()}</div>
-        <div class="friend-name">@${f.handle || f.id}</div>
+        <div class="friend-name">@${S.esc(f.handle || f.id)}</div>
         <button class="friend-action-btn accept"
           onclick="mobileRespondFriend('${f.id}','accept')">✓</button>
         <button class="friend-action-btn reject"
@@ -1645,7 +1594,7 @@ async function renderMobileFriends() {
       el.className = 'friend-item';
       el.innerHTML = `
         <div class="friend-avatar">${(f.handle||'?')[0].toUpperCase()}</div>
-        <div class="friend-name">@${f.handle || f.id}</div>
+        <div class="friend-name">@${S.esc(f.handle || f.id)}</div>
         <button class="friend-action-btn"
           onclick="startChatWithHandle('${f.handle}')">💬</button>
       `;
@@ -1657,26 +1606,9 @@ async function renderMobileFriends() {
 }
 
 window.mobileRespondFriend = async function(friendUid, action) {
-  if (action === 'accept') {
-    await setDoc(doc(db, 'users', currentUser.uid, 'friends', friendUid),
-      { status: 'accepted' }, { merge: true });
-    await setDoc(doc(db, 'users', friendUid, 'friends', currentUser.uid),
-      { status: 'accepted' }, { merge: true });
-  } else {
-    await deleteDoc(doc(db, 'users', currentUser.uid, 'friends', friendUid));
-    await deleteDoc(doc(db, 'users', friendUid, 'friends', currentUser.uid));
-  }
+  await S.respondFriendRequest(friendUid, action);
   renderMobileFriends();
 };
-
-function formatTime(ms) {
-  const d = new Date(ms);
-  const now = new Date();
-  if (d.toDateString() === now.toDateString()) {
-    return d.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' });
-  }
-  return d.toLocaleDateString('ru', { day: 'numeric', month: 'short' });
-}
 
 function openChat(chat, otherHandle) {
   activeChat = chat;
@@ -1684,8 +1616,8 @@ function openChat(chat, otherHandle) {
   document.getElementById('chat-subtitle').textContent = chat.id;
   renderMessages([]);
   if (unsubMessages) unsubMessages();
-  unsubMessages = onSnapshot(
-    collection(db, 'chats', chat.id, 'messages'),
+  unsubMessages = S.onSnapshot(
+    S.collection(db, 'chats', chat.id, 'messages'),
     snap => {
       activeChatMessages = snap.docs
         .map(d => ({ id: d.id, ...d.data() }))
@@ -1711,10 +1643,10 @@ function renderMessages(msgs) {
     wrapper.style.display = 'flex';
     wrapper.style.flexDirection = 'column';
     wrapper.style.alignItems = isOut ? 'flex-end' : 'flex-start';
-    const time = msg.createdAt ? formatTime(msg.createdAt.seconds * 1000) : '';
+    const time = msg.createdAt ? S.formatTime(msg.createdAt.seconds * 1000) : '';
     wrapper.innerHTML = `
-      ${!isOut ? `<div class="msg-sender">@${msg.senderHandle || '?'}</div>` : ''}
-      <div class="msg-bubble ${isOut ? 'msg-out' : 'msg-in'}">${msg.text}</div>
+      ${!isOut ? `<div class="msg-sender">@${S.esc(msg.senderHandle || '?')}</div>` : ''}
+      <div class="msg-bubble ${isOut ? 'msg-out' : 'msg-in'}">${S.esc(msg.text)}</div>
       <div class="msg-time">${time}</div>
     `;
     list.appendChild(wrapper);
@@ -1728,15 +1660,15 @@ window.sendMessage = async function() {
   if (!text || !activeChat || !currentUser) return;
   input.value = '';
   const handle = await ensureMyHandle();
-  await addDoc(collection(db, 'chats', activeChat.id, 'messages'), {
+  await S.addDoc(S.collection(db, 'chats', activeChat.id, 'messages'), {
     text,
     senderUid: currentUser.uid,
     senderHandle: handle || currentUser.email,
-    createdAt: serverTimestamp()
+    createdAt: S.serverTimestamp()
   });
-  await setDoc(doc(db, 'chats', activeChat.id), {
+  await S.setDoc(S.doc(db, 'chats', activeChat.id), {
     lastMessage: text,
-    lastAt: serverTimestamp()
+    lastAt: S.serverTimestamp()
   }, { merge: true });
 };
 
@@ -1760,14 +1692,13 @@ window.searchUsers = async function(val) {
 
   let userData = null;
 
-  // Поиск по #ID если начинается с цифры или #
+  // Поиск по #ID (6 цифр — единый формат)
   if (/^#?\d+$/.test(val.trim())) {
     const numId = parseInt(clean);
-    const snap = await getDocs(query(collection(db, 'users'), where('numericId', '==', numId)));
+    const snap = await S.getDocs(S.query(S.collection(db, 'users'), S.where('numericId', '==', numId)));
     if (!snap.empty) userData = { uid: snap.docs[0].id, ...snap.docs[0].data() };
   } else {
-    // Поиск по handle
-    const snap = await getDocs(query(collection(db, 'users'), where('handle', '==', clean)));
+    const snap = await S.getDocs(S.query(S.collection(db, 'users'), S.where('handle', '==', clean)));
     if (!snap.empty) userData = { uid: snap.docs[0].id, ...snap.docs[0].data() };
   }
 
@@ -1787,7 +1718,7 @@ window.searchUsers = async function(val) {
   el.innerHTML = `
     <div class="chat-avatar">${(userData.handle||'?')[0].toUpperCase()}</div>
     <div class="chat-info">
-      <div class="chat-name">@${userData.handle || '?'}</div>
+      <div class="chat-name">@${S.esc(userData.handle || '?')}</div>
       <div class="chat-last">#${userData.numericId || '—'}</div>
     </div>
     <button class="btn-confirm" style="font-size:11px;padding:6px 10px"
@@ -1797,7 +1728,7 @@ window.searchUsers = async function(val) {
 };
 
 async function startChatWithHandle(handle) {
-  const snapResult = await getDocs(query(collection(db, 'users'), where('handle', '==', handle)));
+  const snapResult = await S.getDocs(S.query(S.collection(db, 'users'), S.where('handle', '==', handle)));
   if (snapResult.empty) { alert('Пользователь @' + handle + ' не найден'); return; }
   const otherUser = { uid: snapResult.docs[0].id, ...snapResult.docs[0].data() };
   const myH = await ensureMyHandle();
@@ -1814,16 +1745,16 @@ async function startChatWithHandle(handle) {
     return;
   }
 
-  const chatRef = doc(collection(db, 'chats'));
-  await setDoc(chatRef, {
+  const chatRef = S.doc(S.collection(db, 'chats'));
+  await S.setDoc(chatRef, {
     members: [currentUser.uid, otherUser.uid],
     memberHandles: {
       [currentUser.uid]: myH,
       [otherUser.uid]: handle
     },
-    createdAt: serverTimestamp(),
+    createdAt: S.serverTimestamp(),
     lastMessage: '',
-    lastAt: serverTimestamp()
+    lastAt: S.serverTimestamp()
   });
 
   const newChat = { id: chatRef.id, members: [currentUser.uid, otherUser.uid],
@@ -1848,94 +1779,43 @@ window.signOut = async function() {
   activeChat = null;
   activeChatMessages = [];
   myHandle = null;
-  await fbSignOut(auth);
+  await S.signOut(auth);
 };
-
-// ── АВТОРИЗАЦИЯ ──
-window.toggleAuthMode = function() {
-  authMode = authMode === 'login' ? 'register' : 'login';
-  document.getElementById('auth-submit').textContent = authMode === 'login' ? 'Войти' : 'Зарегистрироваться';
-  document.getElementById('auth-toggle').innerHTML = authMode === 'login'
-    ? 'Нет аккаунта? <a id="auth-toggle-link">Зарегистрироваться</a>'
-    : 'Уже есть аккаунт? <a id="auth-toggle-link">Войти</a>';
-  document.getElementById('auth-toggle-link').onclick = toggleAuthMode;
-  document.getElementById('auth-error').style.display = 'none';
-};
-
-window.handleAuthSubmit = async function() {
-  const email = document.getElementById('auth-email').value.trim();
-  const password = document.getElementById('auth-password').value;
-  const errorEl = document.getElementById('auth-error');
-  const submitBtn = document.getElementById('auth-submit');
-  if (!email || !password) {
-    errorEl.textContent = 'Введите email и пароль';
-    errorEl.style.display = 'block';
-    return;
-  }
-  errorEl.style.display = 'none';
-  submitBtn.disabled = true;
-  submitBtn.textContent = authMode === 'login' ? 'Вход...' : 'Регистрация...';
-  try {
-    if (authMode === 'login') {
-      await signInWithEmailAndPassword(auth, email, password);
-    } else {
-      await createUserWithEmailAndPassword(auth, email, password);
-    }
-  } catch (err) {
-    errorEl.textContent = err.message.replace('Firebase: ', '').replace(/\(auth\/.*\)/, '').trim();
-    errorEl.style.display = 'block';
-    submitBtn.disabled = false;
-    submitBtn.textContent = authMode === 'login' ? 'Войти' : 'Зарегистрироваться';
-  }
-};
-
-document.getElementById('auth-toggle-link').onclick = toggleAuthMode;
-document.getElementById('auth-submit').onclick = handleAuthSubmit;
-document.getElementById('auth-password').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') { e.preventDefault(); handleAuthSubmit(); }
-});
 
 // ── ПРОФИЛЬ ──
 
-const AVATARS = ['👤','😊','😎','🧠','🚀','⚡','🌿','🔥','🎯','💡','🦊','🐺','🦁','🐉','🌙','⭐'];
+const AVATARS = S.DESK_AVATARS;
 
 async function loadProfile() {
   if (!currentUser) return;
 
-  // Читать из users/{uid} — единый путь
-  const snap = await getDoc(doc(db, 'users', currentUser.uid));
+  const snap = await S.getOne(S.doc(db, 'users', currentUser.uid));
   const data = snap.exists() ? snap.data() : {};
 
-  // Email
   const emailEl = document.getElementById('profile-email');
   if (emailEl) emailEl.textContent = currentUser.email;
 
-  // Handle
   if (data.handle) {
     myHandle = data.handle;
     const handleEl = document.getElementById('profile-handle-display');
     if (handleEl) handleEl.textContent = '@' + data.handle;
   }
 
-  // Числовой ID
   if (data.numericId) {
     const idEl = document.getElementById('profile-numeric-id');
     if (idEl) idEl.textContent = '#' + data.numericId;
   }
 
-  // Имя
   if (data.name) {
     const nameInput = document.getElementById('profile-name-input');
     if (nameInput) nameInput.value = data.name;
   }
 
-  // Аватар
   if (data.avatar) {
     const avatarEl = document.getElementById('profile-avatar');
     if (avatarEl) avatarEl.textContent = data.avatar;
   }
 
-  // Статистика
   const linesEl = document.getElementById('profile-lines-count');
   const entriesEl = document.getElementById('profile-entries-count');
   if (linesEl) linesEl.textContent = lines.length;
@@ -1948,7 +1828,7 @@ async function loadProfile() {
 window.saveProfileName = async function() {
   const name = document.getElementById('profile-name-input').value.trim();
   if (!name || !currentUser) return;
-  await setDoc(doc(db, 'users', currentUser.uid), { name }, { merge: true });
+  await S.setDoc(S.doc(db, 'users', currentUser.uid), { name }, { merge: true });
   const btn = document.querySelector('[onclick="saveProfileName()"]');
   if (btn) {
     btn.textContent = '✓';
@@ -1981,7 +1861,7 @@ window.selectAvatar = async function(avatar, btn) {
   document.querySelectorAll('.avatar-option').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   document.getElementById('profile-avatar').textContent = avatar;
-  await setDoc(doc(db, 'users', currentUser.uid), { avatar }, { merge: true });
+  await S.setDoc(S.doc(db, 'users', currentUser.uid), { avatar }, { merge: true });
   closeModal();
 };
 
@@ -2040,15 +1920,23 @@ window.clearMobileAi = function() {
 };
 
 // ── ON AUTH STATE CHANGED ──
-onAuthStateChanged(auth, async user => {
-  if (user) {
+S.initAuth({
+  onUserReady(user, profile) {
     currentUser = user;
     document.getElementById('auth-overlay').classList.remove('open');
     document.getElementById('app').style.display = 'flex';
     document.getElementById('loading').style.display = 'flex';
     document.getElementById('profile-email').textContent = user.email;
     startListeners(user.uid);
-  } else {
+  },
+  onProfileNotFound(user) {
+    currentUser = user;
+    document.getElementById('auth-overlay').classList.remove('open');
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('loading').style.display = 'none';
+    showHandleScreen();
+  },
+  onSignOut() {
     currentUser = null;
     unsubs.forEach(u => u());
     unsubs = [];
@@ -2064,9 +1952,11 @@ onAuthStateChanged(auth, async user => {
     document.getElementById('auth-error').style.display = 'none';
     document.getElementById('auth-submit').disabled = false;
     document.getElementById('auth-submit').textContent = 'Войти';
-    authMode = 'login';
     document.getElementById('auth-toggle').innerHTML = 'Нет аккаунта? <a id="auth-toggle-link">Зарегистрироваться</a>';
-    document.getElementById('auth-toggle-link').onclick = toggleAuthMode;
+    document.getElementById('auth-toggle-link').onclick = S.toggleAuthMode;
+  },
+  onLoading() {
+    document.getElementById('loading').style.display = 'flex';
   }
 });
 </script>

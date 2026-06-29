@@ -2,6 +2,9 @@ const CACHE_VERSION = 'bloknot-v1';
 const STATIC_ASSETS = [
   './',
   './index.html',
+  './mobile.html',
+  './desktop.html',
+  './shared.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'

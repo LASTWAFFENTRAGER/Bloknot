@@ -1048,26 +1048,32 @@ html, body {
   </div>
 </div>
 
+<script type="module" src="./shared.js"></script>
 <script type="module">
-import { initializeApp }    from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, serverTimestamp,
-         getDocs, query, where, updateDoc, arrayUnion, arrayRemove, getDoc as getOne }
-                             from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut }
-                             from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
+// ── ИСПОЛЬЗУЕМ ОБЩИЙ МОДУЛЬ ──
+const S = window._shared;
+const db = S.db;
+const auth = S.auth;
+const { onSnapshot, collection, doc: firestoreDoc, setDoc, deleteDoc, serverTimestamp,
+        getDocs, query, where, updateDoc, getOne, addDoc, onAuthStateChanged } = S;
+const doc = firestoreDoc; // для обратной совместимости
+const ICONS  = S.ICONS;
+const COLORS = S.COLORS;
+const AVATAR_CLRS = S.AVATAR_CLRS;
+const DESK_AVATARS = S.DESK_AVATARS;
+const genId = S.genId;
+const esc = S.esc;
+const fmt = S.fmt;
+const wc = S.wc;
+const uid = S.uid;
+const getAvatar = S.getAvatar;
+const avatarHTML = S.avatarHTML;
+const avatarSmallHTML = S.avatarSmallHTML;
+const formatTime = S.formatTime;
+const generateNumericId = S.generateNumericId;
+const syncDot = S.syncDot;
 
-const app = initializeApp({
-  apiKey:            "AIzaSyC8q_pr3kIOlb9UEKbxhAuKu9vz6vfQosw",
-  authDomain:        "project-id-6ca36.firebaseapp.com",
-  projectId:         "project-id-6ca36",
-  storageBucket:     "project-id-6ca36.firebasestorage.app",
-  messagingSenderId: "57707102531",
-  appId:             "1:57707102531:web:5c279fb59d7b46c90baff6"
-});
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-let currentUser = null, authMode = 'login';
+let currentUser = null;
 let unsubLines = null, unsubEntries = null, unsubSharedLines = null, unsubSharedEntries = [];
 let lines = [], entries = {}, sharedLines = [], sharedEntries = {};
 let activeLineId = null, activeEntryId = null, isSharedLine = false;
@@ -1077,61 +1083,29 @@ window._nlShared = false;
 let _submitting = false;
 let myProfile = null, friends = {}, profileEntryCount = 0;
 
-const ICONS  = ['💡','✈','🏦','☕','🏭','🌐','🚀','📦','🏗','💎','🎯','📊','🔑','🛢','📋','🧭','🏠','⚡'];
-const COLORS = ['#C8A96E','#7EB8A4','#E07B7B','#7BA7E0','#B07BE0','#E0B47B','#7BE0C8','#E07BB8','#A0E07B','#E0D47B'];
-const AVATAR_CLRS = ['#C8A96E','#7EB8A4','#E07B7B','#7BA7E0','#B07BE0','#E0B47B','#7BE0C8','#E07BB8','#A0E07B','#E0D47B','#D4A87A','#7AA7D4'];
-
-const genId = () => 'id' + Date.now() + Math.random().toString(36).slice(2,6);
-const esc = s => String(s||'').replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"');
-const fmt = ts => { if(!ts)return''; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'}); };
 const activeLine = () => isSharedLine ? sharedLines.find(l=>l.id===activeLineId) : lines.find(l=>l.id===activeLineId);
 const allEntries = () => isSharedLine ? (sharedEntries[activeLineId]||[]) : (entries[activeLineId]||[]);
 const lineEntries = () => allEntries().slice().sort((a,b)=>(b.updatedAt?.seconds||0)-(a.updatedAt?.seconds||0));
 const activeEntry = () => lineEntries().find(e=>e.id===activeEntryId);
-const wc = s => (s||'').trim().split(/\s+/).filter(Boolean).length;
-function syncDot(st) { const d=document.getElementById('sync-dot'); d.className='sync-dot'+(st==='syncing'?' syncing':st==='error'?' error':''); }
-function uid() { return currentUser?.uid; }
 
-function getAvatar(handle) {
-  if(!handle) return ['?','#444'];
-  const sum = handle.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
-  const clr = AVATAR_CLRS[sum % AVATAR_CLRS.length];
-  const init = handle.slice(0,2).toUpperCase();
-  return [init, clr];
-}
-
-function avatarHTML(handle) {
-  const [init, clr] = getAvatar(handle);
-  return `<span class="avatar" style="background:${clr}">${esc(init)}</span>`;
-}
-function avatarSmallHTML(handle) {
-  const [init, clr] = getAvatar(handle);
-  return `<span class="avatar avatar-sm" style="background:${clr}">${esc(init)}</span>`;
-}
-
-function myRole(line) {
-  if(!line||!line.members) return null;
-  return line.members[uid()]?.role || (line.ownerId===uid() ? 'admin' : null);
-}
+function myRole(line) { return S.myRole(line); }
 function canWrite() {
   if(!isSharedLine) return true;
-  const r = myRole(activeLine());
-  return r==='admin'||r==='partner';
+  return S.canWrite(activeLine());
 }
 function canDelete() {
   if(!isSharedLine) return true;
-  const r = myRole(activeLine());
-  return r==='admin';
+  return S.canDelete(activeLine());
 }
 function canManage() {
   if(!isSharedLine) return false;
-  return activeLine()?.ownerId===uid();
+  return S.canManage(activeLine());
 }
 
-async function loadProfile(uid) {
-  const snap = await getOne(doc(db,'users',uid));
+async function loadProfile(uidVal) {
+  const snap = await S.getOne(S.doc(db,'users',uidVal));
   if (snap && snap.exists()) {
-    myProfile = { uid, ...snap.data() };
+    myProfile = { uid: uidVal, ...snap.data() };
     const displayName = myProfile.name || myProfile.handle || '';
     if (displayName) {
       const sbUser = document.getElementById('sb-username');
@@ -1144,7 +1118,7 @@ async function loadProfile(uid) {
 
 async function loadFriends() {
   if(!uid()) { friends={}; return; }
-  const snap = await getDocs(collection(db,'users',uid(),'friends'));
+  const snap = await S.getDocs(S.collection(db,'users',uid(),'friends'));
   friends = {};
   snap.docs.forEach(d=>{ friends[d.id] = {id:d.id,...d.data()}; });
 }
@@ -1346,20 +1320,34 @@ window.changeMemberRole = async function(lineId,memberUid,newRole){
   await updateDoc(doc(db,'sharedLines',lineId), updateObj);
 };
 
-window.removeMember = async function(lineId,memberUid){
-  if(!confirm('Удалить участника?'))return;
-  const updateObj = {}; updateObj[`members.${memberUid}`] = deleteField();
-  await updateDoc(doc(db,'sharedLines',lineId), updateObj);
-  const line=sharedLines.find(l=>l.id===lineId);
-  if(!line)return;
-  const newMembers = {...line.members}; delete newMembers[memberUid];
-  await updateDoc(doc(db,'sharedLines',lineId), {members:newMembers});
-  setTimeout(()=>openManageMembersModal(lineId),300);
-};
+// ── УДАЛЕНИЕ УЧАСТНИКА (исправлено) ──
+window.removeMember = async function(lineId, memberUid) {
+  if (!confirm('Удалить участника?')) return;
+  try {
+    // Удаляем все данные участника одним updateDoc с правильными операциями
+    const line = sharedLines.find(l => l.id === lineId);
+    if (!line) return;
 
-function deleteField() {
-  return null;
-}
+    const newMembers = { ...line.members };
+    delete newMembers[memberUid];
+
+    // Обновляем массив members, удаляя field
+    await updateDoc(doc(db, 'sharedLines', lineId), {
+      [`members.${memberUid}`]: S.deleteField ? S.deleteField() : null,
+      members: newMembers
+    });
+  } catch (e) {
+    console.error('Remove member error:', e);
+    // Fallback: удаляем только через перезапись members
+    const line = sharedLines.find(l => l.id === lineId);
+    if (line) {
+      const newMembers = { ...line.members };
+      delete newMembers[memberUid];
+      await updateDoc(doc(db, 'sharedLines', lineId), { members: newMembers });
+    }
+  }
+  setTimeout(() => openManageMembersModal(lineId), 300);
+};
 
 window.addMemberToLine = async function(lineId){
   const handle=(document.getElementById('am-handle').value||'').trim().toLowerCase();
@@ -1475,8 +1463,6 @@ async function renderProfilePanel(){
     </div>
   `;
 }
-
-const DESK_AVATARS = ['👤','😊','😎','🧠','🚀','⚡','🌿','🔥','🎯','💡','🦊','🐺','🦁','🐉','🌙','⭐'];
 
 window.deskChangeAvatar = function() {
   const current = myProfile?.avatar || '';
@@ -1801,20 +1787,25 @@ window.switchDesktopMode = function(mode) {
 
 async function deskEnsureHandle() {
   if (deskMyHandle) return deskMyHandle;
-  const snap = await getOne(doc(db, 'users', uid(), 'profile', 'main'));
-  if (snap?.handle) {
-    deskMyHandle = snap.handle;
-  } else {
-    const h = prompt('Задай свой уникальный ник (handle) без @:');
-    if (!h) return null;
-    deskMyHandle = h.toLowerCase().replace(/[^a-z0-9_]/g, '');
-    await setDoc(doc(db, 'users', uid(), 'profile', 'main'), {
-      handle: deskMyHandle, email: auth.currentUser.email, uid: uid()
-    }, { merge: true });
-    await setDoc(doc(db, 'handles', deskMyHandle), {
-      uid: uid(), email: auth.currentUser.email, handle: deskMyHandle
-    });
+  // Используем единый путь users/{uid}
+  const snap = await getOne(doc(db, 'users', uid()));
+  if (snap.exists() && snap.data().handle) {
+    deskMyHandle = snap.data().handle;
+    return deskMyHandle;
   }
+  // Если handle не задан, показываем handle-screen (уже есть в онбординге)
+  // Для десктоп-режима используем prompt как fallback
+  const h = prompt('Задай свой уникальный ник (handle) без @:');
+  if (!h) return null;
+  deskMyHandle = h.toLowerCase().replace(/[^a-z0-9_]/g, '');
+  const numericId = await S.ensureUniqueNumericId();
+  await setDoc(doc(db, 'users', uid()), {
+    handle: deskMyHandle,
+    email: auth.currentUser.email,
+    uid: uid(),
+    numericId,
+    createdAt: Date.now()
+  }, { merge: true });
   return deskMyHandle;
 }
 
@@ -1992,47 +1983,71 @@ window.deskOpenNewChat = async function() {
   }
 };
 
+// ── ДЕСКТОП ПОИСК ПОЛЬЗОВАТЕЛЕЙ (использование users/{uid}) ──
 window.deskSearchUsers = async function(val) {
   const el = document.getElementById('d-search-results');
   if (!val || val.length < 2) { el.style.display = 'none'; return; }
   const clean = val.replace('@', '').toLowerCase().trim();
-  const snap = await getOne(doc(db, 'handles', clean));
   el.style.display = 'block';
+  el.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--muted)">Поиск...</div>';
+
+  let userData = null;
+
+  // Поиск по handle
+  const snapByHandle = await getDocs(query(collection(db, 'users'), where('handle', '==', clean)));
+  if (!snapByHandle.empty) {
+    const d = snapByHandle.docs[0];
+    userData = { uid: d.id, ...d.data() };
+  }
+
+  // Поиск по numericId (6 цифр)
+  if (!userData && /^\d+$/.test(clean)) {
+    const snapById = await getDocs(query(collection(db, 'users'), where('numericId', '==', parseInt(clean))));
+    if (!snapById.empty) {
+      const d = snapById.docs[0];
+      userData = { uid: d.id, ...d.data() };
+    }
+  }
+
   el.innerHTML = '';
-  if (!snap || snap.uid === uid()) {
+  if (!userData || userData.uid === uid()) {
     el.innerHTML = '<div style="padding:8px 12px;font-size:11px;color:var(--muted)">Не найдено</div>';
     return;
   }
+
   el.innerHTML = `
     <div class="d-chat-item">
-      <div class="d-chat-avatar">${snap.handle[0].toUpperCase()}</div>
+      <div class="d-chat-avatar">${(userData.handle||'?')[0].toUpperCase()}</div>
       <div class="d-chat-info">
-        <div class="d-chat-name">@${snap.handle}</div>
-        <div class="d-chat-last">${snap.email}</div>
+        <div class="d-chat-name">@${esc(userData.handle || '?')}</div>
+        <div class="d-chat-last">${esc(userData.email || '')}</div>
       </div>
       <button class="btn-p" style="font-size:10px;padding:4px 10px"
-        onclick="deskStartChatWith('${snap.handle}')">Написать</button>
+        onclick="deskStartChatWith('${userData.handle}')">Написать</button>
     </div>
   `;
 };
 
 async function deskStartChatWith(handle) {
-  const snap = await getOne(doc(db, 'handles', handle));
-  if (!snap) { alert('Пользователь @' + handle + ' не найден'); return; }
+  // Поиск пользователя через users collection
+  const snapResult = await getDocs(query(collection(db, 'users'), where('handle', '==', handle)));
+  if (snapResult.empty) { alert('Пользователь @' + handle + ' не найден'); return; }
+  const targetUser = { uid: snapResult.docs[0].id, ...snapResult.docs[0].data() };
+
   const myH = await deskEnsureHandle();
   if (!myH) return;
   const existing = deskChats.find(c =>
-    (c.members || []).includes(snap.uid) && (c.members || []).includes(uid())
+    (c.members || []).includes(targetUser.uid) && (c.members || []).includes(uid())
   );
   if (existing) { deskOpenChat(existing, handle); return; }
   const chatRef = doc(collection(db, 'chats'));
   await setDoc(chatRef, {
-    members: [uid(), snap.uid],
-    memberHandles: { [uid()]: myH, [snap.uid]: handle },
+    members: [uid(), targetUser.uid],
+    memberHandles: { [uid()]: myH, [targetUser.uid]: handle },
     createdAt: serverTimestamp(), lastMessage: '', lastAt: serverTimestamp()
   });
-  deskOpenChat({ id: chatRef.id, members: [uid(), snap.uid],
-    memberHandles: { [uid()]: myH, [snap.uid]: handle } }, handle);
+  deskOpenChat({ id: chatRef.id, members: [uid(), targetUser.uid],
+    memberHandles: { [uid()]: myH, [targetUser.uid]: handle } }, handle);
   document.getElementById('d-search-results').style.display = 'none';
   document.getElementById('d-people-search').value = '';
 }
@@ -2091,16 +2106,10 @@ window.clearAiChat = function() {
   document.getElementById('ai-messages').innerHTML = '';
 };
 
-window.toggleAuthMode = function(){authMode=authMode==='login'?'register':'login';document.getElementById('auth-submit').textContent=authMode==='login'?'Войти':'Зарегистрироваться';document.getElementById('auth-toggle').innerHTML=authMode==='login'?'Нет аккаунта? <a id="auth-toggle-link" onclick="toggleAuthMode()">Зарегистрироваться</a>':'Уже есть аккаунт? <a id="auth-toggle-link" onclick="toggleAuthMode()">Войти</a>';document.getElementById('auth-error').style.display='none';};
-window.handleAuthSubmit = async function(){
-  const email=document.getElementById('auth-email').value.trim(); const password=document.getElementById('auth-password').value; const errorEl=document.getElementById('auth-error'); const submitBtn=document.getElementById('auth-submit');
-  if(!email||!password){errorEl.textContent='Введите email и пароль';errorEl.style.display='block';return;}
-  errorEl.style.display='none'; submitBtn.disabled=true; submitBtn.textContent=authMode==='login'?'Вход...':'Регистрация...';
-  try{if(authMode==='login'){await signInWithEmailAndPassword(auth,email,password);}else{await createUserWithEmailAndPassword(auth,email,password);}}
-  catch(err){errorEl.textContent=err.message.replace('Firebase: ','').replace(/\(auth\/.*\)/,'').trim();errorEl.style.display='block';submitBtn.disabled=false;submitBtn.textContent=authMode==='login'?'Войти':'Зарегистрироваться';}
-};
-window.handleLogout = async function(){await signOut(auth);};
-document.getElementById('auth-password').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();handleAuthSubmit();}});
+window.toggleAuthMode = S.toggleAuthMode;
+window.handleAuthSubmit = S.handleAuthSubmit;
+window.handleLogout = S.handleLogout;
+document.getElementById('auth-password').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();S.handleAuthSubmit();}});
 
 function generateNumericId(){return Math.floor(100000+Math.random()*900000);}
 
