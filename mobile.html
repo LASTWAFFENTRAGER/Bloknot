@@ -908,7 +908,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as fbSignOut }
   from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
-import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy, getDoc }
+import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, serverTimestamp, query, orderBy, getDoc, where, getDocs }
   from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 
 // ── FIREBASE CONFIG ──
@@ -1534,8 +1534,7 @@ window.submitMobileHandle = async function() {
   input.disabled = true;
 
   // Проверить уникальность handle
-  const { getDocs, query: fsQuery, where } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-  const snapHandle = await getDocs(fsQuery(collection(db, 'users'), where('handle', '==', handle)));
+  const snapHandle = await getDocs(query(collection(db, 'users'), where('handle', '==', handle)));
   if (!snapHandle.empty) {
     errEl.textContent = 'Этот никнейм уже занят. Выбери другой.';
     errEl.style.display = 'block';
@@ -1547,7 +1546,7 @@ window.submitMobileHandle = async function() {
   let numericId;
   for (let i = 0; i < 10; i++) {
     numericId = Math.floor(10000000 + Math.random() * 90000000);
-    const snapId = await getDocs(fsQuery(collection(db, 'users'), where('numericId', '==', numericId)));
+    const snapId = await getDocs(query(collection(db, 'users'), where('numericId', '==', numericId)));
     if (snapId.empty) break;
   }
 
@@ -1759,18 +1758,16 @@ window.searchUsers = async function(val) {
   resultsEl.style.display = 'block';
   resultsEl.innerHTML = '<div style="padding:10px;font-size:11px;color:#333">Поиск...</div>';
 
-  const { getDocs, query: fsQuery, where } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-
   let userData = null;
 
   // Поиск по #ID если начинается с цифры или #
   if (/^#?\d+$/.test(val.trim())) {
     const numId = parseInt(clean);
-    const snap = await getDocs(fsQuery(collection(db, 'users'), where('numericId', '==', numId)));
+    const snap = await getDocs(query(collection(db, 'users'), where('numericId', '==', numId)));
     if (!snap.empty) userData = { uid: snap.docs[0].id, ...snap.docs[0].data() };
   } else {
     // Поиск по handle
-    const snap = await getDocs(fsQuery(collection(db, 'users'), where('handle', '==', clean)));
+    const snap = await getDocs(query(collection(db, 'users'), where('handle', '==', clean)));
     if (!snap.empty) userData = { uid: snap.docs[0].id, ...snap.docs[0].data() };
   }
 
@@ -1800,8 +1797,7 @@ window.searchUsers = async function(val) {
 };
 
 async function startChatWithHandle(handle) {
-  const { getDocs, query: fsQuery, where } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-  const snapResult = await getDocs(fsQuery(collection(db, 'users'), where('handle', '==', handle)));
+  const snapResult = await getDocs(query(collection(db, 'users'), where('handle', '==', handle)));
   if (snapResult.empty) { alert('Пользователь @' + handle + ' не найден'); return; }
   const otherUser = { uid: snapResult.docs[0].id, ...snapResult.docs[0].data() };
   const myH = await ensureMyHandle();
