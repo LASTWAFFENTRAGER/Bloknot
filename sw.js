@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'bloknot-v1';
+const CACHE_VERSION = 'bloknot-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
