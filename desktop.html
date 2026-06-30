@@ -2124,8 +2124,6 @@ window.handleAuthSubmit = S.handleAuthSubmit;
 window.handleLogout = S.handleLogout;
 document.getElementById('auth-password').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();S.handleAuthSubmit();}});
 
-function generateNumericId(){return Math.floor(100000+Math.random()*900000);}
-
 window.submitHandle = async function(){
   const handle=(document.getElementById('handle-input').value||'').trim().toLowerCase();
   const errEl=document.getElementById('handle-error'); const submitBtn=document.getElementById('handle-submit');
