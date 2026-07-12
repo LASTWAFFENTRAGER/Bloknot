@@ -3,7 +3,7 @@
 // Единая точка: Firebase, утилиты, авторизация
 // ─────────────────────────────────────────────
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js';
-import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, serverTimestamp, getDocs, query, where, updateDoc, arrayUnion, arrayRemove, getDoc as getOne, addDoc }
+import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, serverTimestamp, getDocs, query, where, updateDoc, arrayUnion, arrayRemove, getDoc as getOne, addDoc, deleteField }
   from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut }
   from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
@@ -336,15 +336,6 @@ function syncDot(state) {
   if (d) d.className = 'sync-dot' + (state === 'syncing' ? ' syncing' : state === 'error' ? ' error' : '');
 }
 
-// ── Firestore deleteField helper ──
-// Простая заглушка для удаления поля в Firestore (вместо import { deleteField })
-function deleteField() {
-  // Возвращаем sentinel-значение, которое Firestore распознает как удаление поля
-  // На практике Firestore Web v9 использует специальный sentinel из импорта,
-  // но так как мы не можем импортировать его динамически, используем обходной путь
-  return { _deleteField: true, __sentinel: true };
-}
-
 // ── Экспорт в глобальную область (для совместимости с inline-скриптами) ──
 window._shared = {
   app, auth, db,
@@ -361,5 +352,6 @@ window._shared = {
   // Firestore функции
   collection, doc, onSnapshot, setDoc, deleteDoc, serverTimestamp,
   getDocs, query, where, updateDoc, arrayUnion, arrayRemove, getOne, addDoc,
-  signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut
+  signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut,
+  deleteField, onAuthStateChanged
 };

@@ -951,9 +951,9 @@ function renderLines() {
     el.onclick = () => selectLine(line);
     addLongPress(el, () => {
       if (confirm(`Удалить линию "${line.name}"?`)) {
-        deleteDoc(S.doc(db, 'users', currentUser.uid, 'lines', line.id));
+        S.deleteDoc(S.doc(db, 'users', currentUser.uid, 'lines', line.id));
         (entries[line.id] || []).forEach(e =>
-          deleteDoc(S.doc(db, 'users', currentUser.uid, 'entries', e.id))
+          S.deleteDoc(S.doc(db, 'users', currentUser.uid, 'entries', e.id))
         );
       }
     });
@@ -992,7 +992,7 @@ function renderEntries() {
     el.onclick = () => selectEntry(entry);
     addLongPress(el, () => {
       if (confirm(`Удалить запись "${entry.title || 'Без заголовка'}"?`)) {
-        deleteDoc(S.doc(db, 'users', currentUser.uid, 'entries', entry.id));
+        S.deleteDoc(S.doc(db, 'users', currentUser.uid, 'entries', entry.id));
         renderEntries();
       }
     });
@@ -1047,7 +1047,7 @@ window.addDraft = function() {
 
 window.deleteDraft = async function(draftId) {
   if (!activeEntry || !currentUser) return;
-  await deleteDoc(S.doc(db, 'users', currentUser.uid, 'entries', activeEntry.id, 'drafts', draftId));
+  await S.deleteDoc(S.doc(db, 'users', currentUser.uid, 'entries', activeEntry.id, 'drafts', draftId));
 };
 
 function startDraftListener(entryId) {
@@ -1066,7 +1066,7 @@ window.deleteCurrentEntry = async function() {
   if (!activeEntry || !currentUser) return;
   if (!confirm('Удалить запись?')) return;
   if (window._draftUnsub) window._draftUnsub();
-  await deleteDoc(S.doc(db, 'users', currentUser.uid, 'entries', activeEntry.id));
+  await S.deleteDoc(S.doc(db, 'users', currentUser.uid, 'entries', activeEntry.id));
   activeEntry = null;
   goBack('screen-entries');
 };
@@ -1097,7 +1097,7 @@ function renderSharedLines() {
     addLongPress(el, () => {
       if (!S.canManage(line)) { alert('Только владелец может удалить линию'); return; }
       if (confirm(`Удалить совместную линию "${line.name}"?`)) {
-        deleteDoc(S.doc(db, 'sharedLines', line.id));
+        S.deleteDoc(S.doc(db, 'sharedLines', line.id));
       }
     });
     list.appendChild(el);
