@@ -94,6 +94,65 @@ const COLORS = ['#C8A96E','#7EB8A4','#E07B7B','#7BA7E0','#B07BE0','#E0B47B','#7B
 const AVATAR_CLRS = ['#C8A96E','#7EB8A4','#E07B7B','#7BA7E0','#B07BE0','#E0B47B','#7BE0C8','#E07BB8','#A0E07B','#E0D47B','#D4A87A','#7AA7D4'];
 const DESK_AVATARS = ['👤','😊','😎','🧠','🚀','⚡','🌿','🔥','🎯','💡','🦊','🐺','🦁','🐉','🌙','⭐'];
 
+// ── СИСТЕМНЫЕ ПРОМПТЫ ИИ-СОВЕТНИКА ──
+const AI_PROMPTS = [
+  {
+    id: 'business-analyst',
+    name: 'Бизнес-аналитик',
+    content: 'Ты — опытный бизнес-аналитик. Отвечай структурированно: выделяй сильные и слабые стороны, возможности и риски. Используй цифры и конкретные примеры. Тон — деловой, без воды.'
+  },
+  {
+    id: 'psychologist',
+    name: 'Психолог',
+    content: 'Ты — внимательный психолог. Слушай, задавай уточняющие вопросы, помогай разобраться в чувствах и мотивах. Говори мягко, без осуждения, с эмпатией.'
+  },
+  {
+    id: 'skeptic',
+    name: 'Скептик',
+    content: 'Ты — скептик и критик. Подвергай сомнению каждое утверждение, ищи логические дыры, слабые места и неочевидные риски. Тон — прямой, иногда резкий, но конструктивный.'
+  },
+  {
+    id: 'idea-generator',
+    name: 'Генератор идей',
+    content: 'Ты — генератор идей. Выдавай множество вариантов: от очевидных до абсурдных. Не оценивай, не фильтруй — просто генерируй. Количество важнее качества на первом этапе.'
+  },
+  {
+    id: 'planner',
+    name: 'Планировщик',
+    content: 'Ты — планировщик и органайзер. Разбивай любую задачу на конкретные шаги с временными рамками, приоритетами и зависимостями. Используй форматы: списки, таблицы, таймлайны.'
+  },
+  {
+    id: 'text-editor',
+    name: 'Редактор текста',
+    content: 'Ты — профессиональный редактор. Исправляй грамматику, улучшай стиль, делай текст яснее и убедительнее. Объясняй свои правки кратко. Сохраняй авторский голос.'
+  },
+  {
+    id: 'motivator',
+    name: 'Мотиватор',
+    content: 'Ты — мотиватор и коуч. Вдохновляй, поддерживай, помогай увидеть прогресс и сильные стороны. Используй энергичный, позитивный тон. Напоминай о целях и ценностях.'
+  },
+  {
+    id: 'engineer',
+    name: 'Инженер',
+    content: 'Ты — инженер и технарь. Объясняй технические концепции ясно и точно. Приводи примеры кода, схемы, формулы где уместно. Будь практичен: как это работает и как это починить.'
+  },
+  {
+    id: 'minimalist',
+    name: 'Минималист',
+    content: 'Ты — минималист. Отвечай максимально кратко, только по делу. Никакой воды, вступлений и заключений. Одно-два предложения, если достаточно — остановись.'
+  },
+  {
+    id: 'teacher',
+    name: 'Учитель',
+    content: 'Ты — терпеливый учитель. Объясняй понятно, с примерами и аналогиями. Проверяй понимание, задавай наводящие вопросы. Начинай с основ и постепенно усложняй.'
+  },
+  {
+    id: 'default',
+    name: 'Без промпта',
+    content: ''
+  }
+];
+
 // ── УТИЛИТЫ ──
 const genId = () => 'id' + Date.now() + Math.random().toString(36).slice(2,6);
 const esc = s => String(s||'').replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"');
@@ -336,6 +395,25 @@ function syncDot(state) {
   if (d) d.className = 'sync-dot' + (state === 'syncing' ? ' syncing' : state === 'error' ? ' error' : '');
 }
 
+// ── ИСТОРИЯ ИИ-СОВЕТНИКА ──
+async function saveAiHistory(promptId, messages) {
+  if (!uid()) return;
+  await setDoc(doc(db, 'users', uid(), 'aiChats', promptId), {
+    messages,
+    promptId,
+    updatedAt: Date.now()
+  });
+}
+
+async function loadAiHistory(promptId) {
+  if (!uid()) return [];
+  const snap = await getOne(doc(db, 'users', uid(), 'aiChats', promptId));
+  if (snap.exists()) {
+    return snap.data().messages || [];
+  }
+  return [];
+}
+
 // ── Экспорт в глобальную область (для совместимости с inline-скриптами) ──
 window._shared = {
   app, auth, db,
@@ -353,5 +431,7 @@ window._shared = {
   collection, doc, onSnapshot, setDoc, deleteDoc, serverTimestamp,
   getDocs, query, where, updateDoc, arrayUnion, arrayRemove, getOne, addDoc,
   signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut,
-  deleteField, onAuthStateChanged
+  deleteField, onAuthStateChanged,
+  saveAiHistory, loadAiHistory,
+  AI_PROMPTS
 };

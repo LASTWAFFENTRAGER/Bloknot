@@ -1,4 +1,9 @@
+// ─────────────────────────────────────────────────
+// БЛОКНОТ — Service Worker
+// Версия кэша (поднимай вручную при каждом деплое)
+// ─────────────────────────────────────────────────
 const CACHE_VERSION = 'bloknot-v2';
+
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -10,8 +15,9 @@ const STATIC_ASSETS = [
   './icons/icon-512.png'
 ];
 
-// Установка: кешируем статику
+// ── УСТАНОВКА: кешируем статику, НЕ делаем skipWaiting ──
 self.addEventListener('install', event => {
+  console.log(`[SW] Установка версии: ${CACHE_VERSION}`);
   event.waitUntil(
     caches.open(CACHE_VERSION).then(cache => {
       return cache.addAll(STATIC_ASSETS).catch(err => {
@@ -19,22 +25,47 @@ self.addEventListener('install', event => {
       });
     })
   );
-  self.skipWaiting();
+  // skipWaiting НЕ вызываем — ждём сигнала от клиента
 });
 
-// Активация: чистим старые кеши
+// ── АКТИВАЦИЯ: чистим старые кеши, оповещаем клиентов о новой версии ──
 self.addEventListener('activate', event => {
+  console.log(`[SW] Активирована версия: ${CACHE_VERSION}`);
   event.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(
-        keys.filter(key => key !== CACHE_VERSION).map(key => caches.delete(key))
+    (async () => {
+      // Чистим все старые кеши, не совпадающие с текущей версией
+      const keys = await caches.keys();
+      await Promise.all(
+        keys.filter(key => key !== CACHE_VERSION).map(key => {
+          console.log(`[SW] Удаляю старый кеш: ${key}`);
+          return caches.delete(key);
+        })
       );
-    })
+
+      // Оповещаем все открытые клиенты о том, что кеш обновлён
+      const clients = await self.clients.matchAll({ type: 'window' });
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'CACHE_UPDATED',
+          version: CACHE_VERSION
+        });
+      });
+      console.log(`[SW] Оповещено клиентов: ${clients.length}`);
+    })()
   );
-  self.clients.claim();
+  // clients.claim НЕ вызываем — старый worker продолжает обслуживать страницы,
+  // пока они не перезагрузятся
 });
 
-// Fetch: стратегия cache-first для статики, network-first для всего остального
+// ── ОЖИДАНИЕ СИГНАЛА ОТ КЛИЕНТА ДЛЯ АКТИВАЦИИ ──
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[SW] Получен сигнал SKIP_WAITING, активирую новую версию...');
+    self.skipWaiting();
+  }
+});
+
+// ── FETCH: cache-first для статики, пропускаем Firebase/API ──
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
@@ -49,7 +80,7 @@ self.addEventListener('fetch', event => {
     url.hostname.includes('googleapis.com') ||
     url.hostname.includes('trycloudflare.com')
   ) {
-    return; // network-first по умолчанию (просто не перехватываем)
+    return; // не перехватываем — network-first по умолчанию
   }
 
   // Для статики — cache-first

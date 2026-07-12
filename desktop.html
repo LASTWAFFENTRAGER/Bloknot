@@ -925,6 +925,7 @@ html, body {
     <span class="panel-title">ИИ советник — DeepSeek</span>
     <button class="btn-g" onclick="clearAiChat()">очистить</button>
   </div>
+  <div id="ai-prompt-bar" style="display:flex;gap:4px;padding:8px 12px;overflow-x:auto;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap"></div>
   <div class="ai-messages" id="ai-messages"></div>
   <div class="d-msg-input-row">
     <input id="ai-input" class="d-msg-input"
@@ -1795,6 +1796,7 @@ window.switchDesktopMode = function(mode) {
     deskRenderFriends();
   } else if (mode === 'ai') {
     panelAi.classList.add('active');
+    loadAiChatOnOpen();
   }
 };
 
@@ -1822,6 +1824,16 @@ async function deskEnsureHandle() {
     createdAt: Date.now()
   }, { merge: true });
   return deskMyHandle;
+}
+
+let _deskLastMsgCount = 0;
+
+async function requestNotificationPermission() {
+  if (window._notifRequested) return;
+  window._notifRequested = true;
+  if ('Notification' in window && Notification.permission === 'default') {
+    try { await Notification.requestPermission(); } catch(e) {}
+  }
 }
 
 function deskStartChatsListener() {
@@ -1958,6 +1970,20 @@ window.deskRespondFriend = async function(friendUid, action) {
 function deskRenderMessages(msgs) {
   const list = document.getElementById('d-messages-list');
   if (!list) return;
+
+  if (msgs.length > _deskLastMsgCount && _deskLastMsgCount > 0 && document.visibilityState === 'hidden') {
+    const newMsgs = msgs.slice(_deskLastMsgCount);
+    newMsgs.forEach(msg => {
+      if (msg.senderUid !== uid() && 'Notification' in window && Notification.permission === 'granted') {
+        const handle = msg.senderHandle || 'Кто-то';
+        const body = (msg.text || '').slice(0, 120);
+        const notif = new Notification('@' + handle, { body, icon: './icons/icon-192.png', tag: 'bloknot-msg' });
+        notif.addEventListener('click', () => { window.focus(); if (typeof switchDesktopMode === 'function') switchDesktopMode('people'); });
+      }
+    });
+  }
+  _deskLastMsgCount = msgs.length;
+
   list.innerHTML = '';
   msgs.forEach(msg => {
     const isOut = msg.senderUid === uid();
@@ -2070,6 +2096,44 @@ async function deskStartChatWith(handle) {
 // ── ДЕСКТОП ИИ (DeepSeek) ──
 
 let aiHistory = [];
+let activeAiPrompt = 'default';
+
+function renderAiPromptBar() {
+  const bar = document.getElementById('ai-prompt-bar');
+  if (!bar) return;
+  bar.innerHTML = S.AI_PROMPTS.map(p => {
+    const active = p.id === activeAiPrompt;
+    return `<button onclick="switchAiPrompt('${p.id}')"
+      style="font-size:9px;padding:3px 8px;border-radius:3px;cursor:pointer;
+      font-family:var(--mono);letter-spacing:0.5px;white-space:nowrap;
+      background:${active ? 'var(--gold)' : 'var(--bg3)'};
+      color:${active ? '#0F0F0F' : 'var(--muted)'};
+      border:1px solid ${active ? 'var(--gold)' : 'var(--border2)'}">${p.name}</button>`;
+  }).join('');
+}
+
+window.switchAiPrompt = async function(promptId) {
+  if (activeAiPrompt === promptId) return;
+  activeAiPrompt = promptId;
+  renderAiPromptBar();
+  document.getElementById('ai-messages').innerHTML = '';
+  aiHistory = await S.loadAiHistory(activeAiPrompt);
+  aiHistory.forEach(msg => appendAiMsg(msg.role, msg.content));
+  // Сохраняем последний использованный промпт в профиль
+  if (uid()) {
+    await setDoc(doc(db, 'users', uid()), { aiPrompt: activeAiPrompt }, { merge: true });
+  }
+};
+
+async function loadAiChatOnOpen() {
+  renderAiPromptBar();
+  aiHistory = await S.loadAiHistory(activeAiPrompt);
+  const list = document.getElementById('ai-messages');
+  list.innerHTML = '';
+  aiHistory.forEach(msg => {
+    appendAiMsg(msg.role, msg.content);
+  });
+}
 
 window.sendAiMessage = async function() {
   const input = document.getElementById('ai-input');
@@ -2091,13 +2155,19 @@ window.sendAiMessage = async function() {
     const res = await fetch('https://bloknot.abdisaminuuluaibek2051.workers.dev', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: aiHistory })
+      body: JSON.stringify({
+        messages: aiHistory,
+        system: S.AI_PROMPTS.find(p => p.id === activeAiPrompt)?.content || ''
+      })
     });
     const data = await res.json();
     const reply = data.reply || 'Нет ответа';
     thinking.remove();
     appendAiMsg('bot', reply);
     aiHistory.push({ role: 'assistant', content: reply });
+
+    // Сохраняем историю после каждого обмена
+    await S.saveAiHistory(activeAiPrompt, aiHistory);
   } catch(e) {
     thinking.remove();
     appendAiMsg('bot', '⚠️ Ошибка соединения с ИИ.');
@@ -2116,9 +2186,11 @@ function appendAiMsg(role, text) {
   list.scrollTop = list.scrollHeight;
 }
 
-window.clearAiChat = function() {
+window.clearAiChat = async function() {
   aiHistory = [];
   document.getElementById('ai-messages').innerHTML = '';
+  // Очищаем историю в Firestore для текущего промпта
+  await S.saveAiHistory(activeAiPrompt, []);
 };
 
 window.toggleAuthMode = S.toggleAuthMode;
@@ -2332,6 +2404,7 @@ onAuthStateChanged(auth, async user => {
       startFirestoreListeners(user.uid);
       deskStartChatsListener();
       deskEnsureHandle();
+      requestNotificationPermission();
     }
   } else {
     if (callRoom) callRoom.disconnect();
@@ -2349,8 +2422,76 @@ onAuthStateChanged(auth, async user => {
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js');
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        console.log('[App] SW зарегистрирован, scope:', reg.scope);
+
+        // Если есть ожидающий новый worker, предлагаем обновление
+        if (reg.waiting) {
+          showUpdateBanner(reg);
+        }
+
+        // Отслеживаем появление нового ожидающего worker'а
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              showUpdateBanner(reg);
+            }
+          });
+        });
+      });
+
+      // Слушаем сообщения от SW (postMessage о новой версии кэша)
+      navigator.serviceWorker.addEventListener('message', event => {
+        if (event.data && event.data.type === 'CACHE_UPDATED') {
+          console.log('[App] Получено уведомление от SW: кеш обновлён до', event.data.version);
+          // Кеш уже обновлён, можно просто перезагрузить
+        }
+      });
     });
+
+    function showUpdateBanner(reg) {
+      if (document.getElementById('sw-update-banner')) return;
+
+      const banner = document.createElement('div');
+      banner.id = 'sw-update-banner';
+      banner.style.cssText = `
+        position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+        z-index:99999;display:flex;align-items:center;gap:12px;
+        background:var(--bg2,#141414);border:1px solid var(--gold,#C8A96E);
+        border-radius:6px;padding:10px 18px;
+        font-family:var(--mono,Courier New,monospace);font-size:10px;
+        letter-spacing:1px;color:var(--text,#E8E2D9);
+        box-shadow:0 4px 20px rgba(0,0,0,0.5);
+        animation:swBannerIn 0.3s ease;
+      `;
+      banner.innerHTML = `
+        <span>Доступно обновление</span>
+        <button id="sw-update-btn" style="
+          background:var(--gold,#C8A96E);color:#0F0F0F;border:none;
+          border-radius:3px;padding:5px 12px;cursor:pointer;
+          font-family:var(--mono,Courier New,monospace);font-size:9px;
+          letter-spacing:1px;white-space:nowrap
+        ">Обновить</button>
+      `;
+      document.body.appendChild(banner);
+
+      const style = document.createElement('style');
+      style.textContent = '@keyframes swBannerIn{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';
+      document.head.appendChild(style);
+
+      document.getElementById('sw-update-btn').addEventListener('click', () => {
+        banner.innerHTML = '<span style="color:var(--muted,#888)">Обновление...</span>';
+        banner.style.borderColor = 'var(--border2,#333)';
+        if (reg.waiting) {
+          reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          window.location.reload();
+        }, { once: true });
+      });
+    }
   }
 </script>
 </body>
