@@ -2410,6 +2410,7 @@ onAuthStateChanged(auth, async user => {
     } else {
       myProfile=profSnap.data();
       document.getElementById('sb-username').textContent=myProfile.handle||'БЛОКНОТ';
+      document.getElementById('sb-subtitle').textContent=myProfile.tagline||'*любимая фраза*';
       document.getElementById('handle-screen').style.display='none';
       document.getElementById('app').style.display='flex';
       document.getElementById('loading').style.display='flex';
