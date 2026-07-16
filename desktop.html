@@ -815,7 +815,7 @@ html, body {
   <aside id="sidebar">
     <div class="sb-head">
       <div class="sb-logo"><span class="clickable" onclick="openProfile()" id="sb-username">БЛОКНОТ</span> <span class="sync-dot" id="sync-dot"></span></div>
-      <div class="sb-sub">стратегический</div>
+      <div class="sb-sub" id="sb-subtitle">*любимая фраза*</div>
     </div>
     <div class="sb-section">РЕЖИМ</div>
     <button class="sb-nav-btn active" id="nav-notes" onclick="switchDesktopMode('notes')">
@@ -1462,13 +1462,19 @@ async function renderProfilePanel(){
 
     <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
       <label class="m-lbl">ТЕМА ОФОРМЛЕНИЯ</label>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px">
+      <div style="margin-top:6px;display:flex;flex-direction:column;gap:2px">
         ${S.THEMES.map(t => `
-          <button onclick="deskPickTheme('${t.id}')"
-            style="display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:1px solid ${(myProfile.themeId||'strategic')===t.id?'var(--gold)':'var(--border)'};border-radius:6px;padding:6px 4px;cursor:pointer;color:var(--text);font-size:8px;font-family:var(--mono)">
-            <span style="width:18px;height:18px;border-radius:50%;background:${t.bg};border:1px solid ${t.accent}"></span>
-            ${t.name}
-          </button>
+          <div onclick="deskPickTheme('${t.id}')"
+            style="display:flex;align-items:center;gap:8px;padding:8px 10px;
+            cursor:pointer;border-radius:4px;
+            ${(myProfile.themeId||'strategic')===t.id
+              ? 'background:var(--bg3);color:var(--gold);'
+              : 'color:var(--muted);'}
+            font-size:11px;font-family:var(--sans);transition:background 0.1s">
+            <span style="width:10px;height:10px;border-radius:50%;background:${t.accent};flex-shrink:0;${(myProfile.themeId||'strategic')===t.id?'box-shadow:0 0 6px '+t.accent:''}"></span>
+            <span style="flex:1">${t.name}</span>
+            ${(myProfile.themeId||'strategic')===t.id ? '<span style="font-size:10px">✓</span>' : ''}
+          </div>
         `).join('')}
       </div>
     </div>
@@ -1520,6 +1526,15 @@ window.deskSaveName = async function() {
   if (btn) { btn.textContent='✓'; btn.style.color='#4caf50'; setTimeout(()=>btn.style.color='',1500); }
   document.getElementById('sb-username').textContent = name || myProfile.handle;
 };
+
+window.deskSaveTagline = async function() {
+    const tagline = (document.getElementById('d-profile-tagline')?.value || '').trim().slice(0, 60);
+    await setDoc(doc(db,'users',uid()), { tagline }, { merge: true });
+    myProfile.tagline = tagline;
+    document.getElementById('sb-subtitle').textContent = tagline || '*любимая фраза*';
+    const btn = document.querySelector('[onclick="deskSaveTagline()"]');
+    if (btn) { btn.textContent='✓'; btn.style.color='#4caf50'; setTimeout(()=>{ btn.textContent='✓'; btn.style.color=''; },1500); }
+  };
 
 window.deskSaveHandle = async function() {
   const newHandle = (document.getElementById('d-profile-handle')?.value || '').trim().toLowerCase();
@@ -2108,20 +2123,20 @@ function renderAiPromptBar() {
       font-family:var(--mono);letter-spacing:0.5px;white-space:nowrap;
       background:${active ? 'var(--gold)' : 'var(--bg3)'};
       color:${active ? '#0F0F0F' : 'var(--muted)'};
-      border:1px solid ${active ? 'var(--gold)' : 'var(--border2)'}">${p.name}</button>`;
+      border:1px solid ${active ? 'var(--gold)' : 'var(--border2)'}">${p.title}</button>`;
   }).join('');
 }
 
 window.switchAiPrompt = async function(promptId) {
   if (activeAiPrompt === promptId) return;
   activeAiPrompt = promptId;
-  renderAiPromptBar();
+    renderAiPromptBar();
   document.getElementById('ai-messages').innerHTML = '';
   aiHistory = await S.loadAiHistory(activeAiPrompt);
   aiHistory.forEach(msg => appendAiMsg(msg.role, msg.content));
   // Сохраняем последний использованный промпт в профиль
   if (uid()) {
-    await setDoc(doc(db, 'users', uid()), { aiPrompt: activeAiPrompt }, { merge: true });
+    await setDoc(doc(db, 'users', uid()), { lastPromptId: activeAiPrompt }, { merge: true });
   }
 };
 
@@ -2157,7 +2172,7 @@ window.sendAiMessage = async function() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messages: aiHistory,
-        system: S.AI_PROMPTS.find(p => p.id === activeAiPrompt)?.content || ''
+        system: S.AI_PROMPTS.find(p => p.id === activeAiPrompt)?.text || ''
       })
     });
     const data = await res.json();

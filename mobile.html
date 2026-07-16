@@ -2107,22 +2107,19 @@ window.openThemes = function() {
 function renderThemesGrid() {
   const grid = document.getElementById('themes-grid');
   if (!grid) return;
-  const currentThemeId = (S.findThemeById).name ? null : null;
-  // Определяем текущую тему через переменную, которая будет установлена при загрузке
   const activeThemeId = window._currentThemeId || 'strategic';
 
   grid.innerHTML = S.THEMES.map(t => {
     const isActive = t.id === activeThemeId;
-    const textColor = t.isDark ? '#ccc' : '#333';
     return `
       <div onclick="pickTheme('${t.id}')"
-        style="display:flex;align-items:center;gap:12px;padding:14px;
-        background:${t.bg};border:1px solid ${isActive ? t.accent : (t.isDark ? '#1a1a1a' : '#ddd')};
-        border-radius:8px;cursor:pointer;margin-bottom:8px;
-        transition:border-color 0.15s;min-height:62px">
-        <span style="width:20px;height:20px;border-radius:50%;background:${t.accent};flex-shrink:0"></span>
-        <span style="flex:1;font-size:13px;color:${textColor}">${t.name}</span>
-        ${isActive ? '<span style="color:' + t.accent + ';font-size:14px">✓</span>' : ''}
+        style="display:flex;align-items:center;gap:10px;padding:12px 14px;
+        cursor:pointer;border-bottom:1px solid #111;
+        ${isActive ? 'background:#111;color:#c9a84c;' : 'color:#555;'}
+        font-size:13px;font-family:inherit;transition:background 0.1s">
+        <span style="width:10px;height:10px;border-radius:50%;background:${t.accent};flex-shrink:0;${isActive ? 'box-shadow:0 0 6px '+t.accent : ''}"></span>
+        <span style="flex:1">${t.name}</span>
+        ${isActive ? '<span style="font-size:11px;color:#c9a84c">✓</span>' : ''}
       </div>
     `;
   }).join('');
@@ -2176,7 +2173,7 @@ function renderMobileAiPromptBar() {
       font-family:'Courier New',monospace;letter-spacing:0.3px;white-space:nowrap;
       background:${active ? '#c9a84c' : '#0a0a0a'};
       color:${active ? '#000' : '#555'};
-      border:1px solid ${active ? '#c9a84c' : '#1a1a1a'}">${p.name}</button>`;
+      border:1px solid ${active ? '#c9a84c' : '#1a1a1a'}">${p.title}</button>`;
   }).join('');
 }
 
@@ -2189,7 +2186,7 @@ window.switchMobileAiPrompt = async function(promptId) {
   mobileAiHistory.forEach(msg => appendMobileAiMsg(msg.role, msg.content));
   // Сохраняем последний использованный промпт в профиль
   if (currentUser) {
-    await S.setDoc(S.doc(db, 'users', currentUser.uid), { aiPrompt: mobileAiPrompt }, { merge: true });
+    await S.setDoc(S.doc(db, 'users', currentUser.uid), { lastPromptId: mobileAiPrompt }, { merge: true });
   }
 };
 
@@ -2226,7 +2223,7 @@ window.sendMobileAi = async function() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messages: mobileAiHistory,
-        system: S.AI_PROMPTS.find(p => p.id === mobileAiPrompt)?.content || ''
+        system: S.AI_PROMPTS.find(p => p.id === mobileAiPrompt)?.text || ''
       })
     });
     const data = await res.json();
