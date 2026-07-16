@@ -779,6 +779,13 @@ html, body {
 }
 .d-fa-btn.accept { border-color: #2a4a2a; color: #4caf50; }
 .d-fa-btn.reject { border-color: #4a2a2a; color: #c0392b; }
+
+/* Popup ИИ для записи */
+#entry-ai-popup { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:10001; background:var(--bg2); border:1px solid var(--gold); border-radius:6px; padding:16px; max-width:520px; width:95%; max-height:80vh; overflow-y:auto; }
+.entry-ai-prompts { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:12px; }
+.entry-ai-prompts button { font-size:9px; padding:3px 8px; border-radius:3px; cursor:pointer; font-family:var(--mono); background:var(--bg3); border:1px solid var(--border2); color:var(--muted); white-space:nowrap; }
+.entry-ai-prompts button:hover { border-color:var(--gold); color:var(--text); }
+.entry-ai-resp { max-height:320px; overflow-y:auto; font-size:12px; line-height:1.7; color:var(--text); white-space:pre-wrap; border-top:1px solid var(--border); padding-top:10px; margin-top:10px; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
 </head>
@@ -857,7 +864,7 @@ html, body {
   <div id="col-editor">
     <div id="editor-empty" style="display:flex"><div class="ee-icon">✦</div><div class="ee-text">БЛОКНОТ</div><div class="ee-hint">Выбери запись или создай новую</div></div>
     <div id="editor-view">
-      <div id="ev-topbar"><div id="ev-title-display"></div><div class="ev-actions"><button class="btn-o" onclick="openDraftModal()">+ черновик</button><button class="btn-o" onclick="enterEditMode()">Редактировать</button><button class="btn-del" onclick="confirmDelEntry()">Удалить</button></div></div>
+      <div id="ev-topbar"><div id="ev-title-display"></div><div class="ev-actions"><button class="btn-o" onclick="openEntryAiPopup()">🤖 ИИ</button><button class="btn-o" onclick="openDraftModal()">+ черновик</button><button class="btn-o" onclick="enterEditMode()">Редактировать</button><button class="btn-del" onclick="confirmDelEntry()">Удалить</button></div></div>
       <div id="ev-tags-row"></div><div id="ev-date-row"></div>
       <div id="ev-body-wrap"><div id="ev-body"></div></div>
       <div id="ev-drafts"><div class="evd-head">ЧЕРНОВИКИ <button class="btn-g" style="font-size:10px;font-family:var(--mono)" onclick="openDraftModal()">+ добавить</button></div><div id="ev-drafts-list"></div></div>
@@ -938,6 +945,16 @@ html, body {
 </div>
 
 <div id="overlay" onclick="handleBgClick(event)"><div id="mbox"></div></div>
+
+<div id="entry-ai-popup">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <span style="font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:1px;">ИИ по записи</span>
+    <button class="btn-g" onclick="closeEntryAiPopup()" style="font-size:14px;">✕</button>
+  </div>
+  <div class="entry-ai-prompts" id="entry-ai-prompts-list"></div>
+  <div style="font-size:10px;color:var(--dim);margin-bottom:8px;font-family:var(--mono);" id="entry-ai-context-label"></div>
+  <div class="entry-ai-resp" id="entry-ai-response">Выбери промпт выше, чтобы применить ИИ к текущей записи.</div>
+</div>
 
 <div id="call-panel">
   <div id="call-topbar">
@@ -1206,6 +1223,7 @@ window.renderList = function(){
   if (typeof mpRenderEntries === 'function' && activeLineId) {
     mpRenderEntries(activeLineId, isSharedLine);
   }
+  renderSharedInfoBar();
 }
 
 function showPanel(which){document.getElementById('editor-empty').style.display=which==='empty'?'flex':'none';document.getElementById('editor-view').style.display=which==='view'?'flex':'none';document.getElementById('editor-edit').style.display=which==='edit'?'flex':'none';}
@@ -1379,6 +1397,88 @@ window.addMemberToLine = async function(lineId){
   sucEl.textContent='Участник добавлен!'; sucEl.style.display='block';
   document.getElementById('am-handle').value='';
   setTimeout(()=>{if(document.getElementById('overlay').classList.contains('open'))openManageMembersModal(lineId);},1200);
+};
+
+// ── БЛОК ИНФЫ О СОВМЕСТНОЙ ЛИНИИ ──
+function renderSharedInfoBar() {
+  const bar = document.getElementById('shared-info-bar');
+  if (!bar) return;
+  if (!isSharedLine || !activeLineId) { bar.style.display = 'none'; renderSharedInviteRow(); return; }
+  const line = activeLine();
+  if (!line) { bar.style.display = 'none'; return; }
+  bar.style.display = 'block';
+  const members = line.members || {};
+  const ownerHandle = (line.memberHandles && line.memberHandles[line.ownerId]) || line.ownerId || '?';
+  const memberHandles = Object.entries(members).map(([mid, info]) => {
+    const h = info.handle || (line.memberHandles && line.memberHandles[mid]) || mid;
+    const isOwner = mid === line.ownerId;
+    const removeBtn = (line.ownerId === uid() && mid !== uid())
+      ? ` <span onclick="quickRemoveFromLine('${mid}')" style="color:#c44;cursor:pointer;font-size:9px;margin-left:2px">✕</span>`
+      : '';
+    return `@${esc(h)}${isOwner ? ' (создатель)' : ''}${removeBtn}`;
+  }).join(', ');
+  const entryCount = (sharedEntries[activeLineId] || []).length;
+  bar.innerHTML = `Создатель: @${esc(ownerHandle)} &nbsp;|&nbsp; Участники: ${memberHandles || '—'} &nbsp;|&nbsp; Записей: ${entryCount}`;
+  renderSharedInviteRow();
+}
+
+function renderSharedInviteRow() {
+  const row = document.getElementById('shared-invite-row');
+  if (!row) return;
+  if (!isSharedLine || !activeLineId) { row.style.display = 'none'; return; }
+  row.style.display = 'block';
+  row.innerHTML = `<button class="btn-o" style="font-size:9px;padding:2px 8px" onclick="showSharedInviteSearch()">+ Пригласить</button>`;
+}
+
+window.showSharedInviteSearch = function() {
+  const row = document.getElementById('shared-invite-row');
+  if (!row) return;
+  row.innerHTML = `
+    <div style="display:flex;gap:4px;align-items:center">
+      <input id="shared-invite-input" type="text" placeholder="@никнейм или #ID"
+        style="background:var(--bg3);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-size:10px;padding:3px 6px;width:160px;outline:none"
+        onkeydown="if(event.key==='Enter')inviteToSharedLine()">
+      <button class="btn-p" style="font-size:9px;padding:2px 8px" onclick="inviteToSharedLine()">Пригласить</button>
+      <span id="shared-invite-msg" style="font-size:9px;color:var(--muted);margin-left:4px"></span>
+    </div>
+  `;
+  setTimeout(() => { const inp = document.getElementById('shared-invite-input'); if (inp) inp.focus(); }, 50);
+};
+
+window.inviteToSharedLine = async function() {
+  const inp = document.getElementById('shared-invite-input');
+  const msg = document.getElementById('shared-invite-msg');
+  const handle = (inp?.value || '').trim().replace(/[@#]/g, '').toLowerCase();
+  if (!handle) return;
+  if (msg) { msg.textContent = 'Поиск...'; msg.style.color = 'var(--muted)'; }
+
+  let targetUid = null, targetHandle = null;
+  if (/^\d+$/.test(handle)) {
+    const snap = await getDocs(query(collection(db,'users'), where('numericId','==', parseInt(handle))));
+    if (!snap.empty) { targetUid = snap.docs[0].id; targetHandle = snap.docs[0].data().handle; }
+  } else {
+    const snap = await getDocs(query(collection(db,'users'), where('handle','==', handle)));
+    if (!snap.empty) { targetUid = snap.docs[0].id; targetHandle = snap.docs[0].data().handle; }
+  }
+  if (!targetUid) { if (msg) { msg.textContent = 'Не найден'; msg.style.color = '#c44'; } return; }
+  if (targetUid === uid()) { if (msg) { msg.textContent = 'Это вы'; msg.style.color = '#c44'; } return; }
+
+  const line = activeLine();
+  if (line && line.members && line.members[targetUid]) {
+    if (msg) { msg.textContent = 'Уже участник'; msg.style.color = 'var(--dim)'; }
+    return;
+  }
+  const updateObj = {}; updateObj[`members.${targetUid}`] = { role: 'reader', handle: targetHandle };
+  await updateDoc(doc(db, 'sharedLines', activeLineId), updateObj);
+  if (msg) { msg.textContent = 'Добавлен!'; msg.style.color = '#4caf50'; }
+  if (inp) inp.value = '';
+  setTimeout(() => { renderSharedInfoBar(); }, 600);
+};
+
+window.quickRemoveFromLine = async function(memberUid) {
+  if (!confirm('Удалить участника из линии?')) return;
+  await window.removeMember(activeLineId, memberUid);
+  setTimeout(() => renderSharedInfoBar(), 400);
 };
 
 window.openProfile = async function(){
@@ -1778,6 +1878,15 @@ function startCallDurationTimer() {
 function stopCallDurationTimer() { if (callDurationTimer) { clearInterval(callDurationTimer); callDurationTimer = null; } document.getElementById('call-duration').textContent = '00:00'; }
 
 const listHead=document.getElementById('list-head'); const extraRow=document.createElement('div'); extraRow.style='display:flex;gap:5px;justify-content:space-between;align-items:center;'; extraRow.innerHTML=`<button class="btn-p" style="font-size:10px;padding:5px 12px" onclick="openNewEntry()">+ запись</button><button class="btn-o" style="font-size:10px;padding:4px 10px;${!isSharedLine?'display:none':''}" id="btn-call" onclick="startCall()">📞 Позвонить</button><button class="btn-del" style="font-size:10px" onclick="confirmDelLine()">удалить линию</button>`; listHead.appendChild(extraRow);
+// Shared line info bar (below extraRow)
+const sharedInfoBar = document.createElement('div');
+sharedInfoBar.id = 'shared-info-bar';
+sharedInfoBar.style.cssText = 'display:none;padding:6px 14px;border-bottom:1px solid var(--border);font-size:10px;color:var(--muted);font-family:var(--sans);line-height:1.7';
+listHead.appendChild(sharedInfoBar);
+const sharedInviteRow = document.createElement('div');
+sharedInviteRow.id = 'shared-invite-row';
+sharedInviteRow.style.cssText = 'display:none;padding:4px 14px;border-bottom:1px solid var(--border)';
+listHead.appendChild(sharedInviteRow);
 
 // ── ДЕСКТОП РЕЖИМЫ ──
 
@@ -2109,6 +2218,60 @@ async function deskStartChatWith(handle) {
 }
 
 // ── ДЕСКТОП ИИ (DeepSeek) ──
+
+let entryAiChat = [];
+
+window.openEntryAiPopup = function() {
+  const entry = activeEntry();
+  if (!entry) return;
+  document.getElementById('entry-ai-popup').style.display = 'block';
+  document.getElementById('entry-ai-context-label').textContent = 'Запись: ' + (entry.title || 'Без названия');
+
+  const promptsList = document.getElementById('entry-ai-prompts-list');
+  promptsList.innerHTML = S.AI_PROMPTS.map(p =>
+    `<button onclick="entryAiSelectPrompt('${p.id}')">${p.title}</button>`
+  ).join('');
+
+  document.getElementById('entry-ai-response').textContent = 'Выбери промпт выше.';
+};
+
+window.closeEntryAiPopup = function() {
+  document.getElementById('entry-ai-popup').style.display = 'none';
+  entryAiChat = [];
+};
+
+window.entryAiSelectPrompt = async function(promptId) {
+  const entry = activeEntry();
+  if (!entry) return;
+  const prompt = S.AI_PROMPTS.find(p => p.id === promptId);
+  if (!prompt) return;
+
+  const respEl = document.getElementById('entry-ai-response');
+  respEl.textContent = 'Думает...';
+
+  const context = 'Заголовок: ' + (entry.title || '') + '\n\nТекст записи:\n' + (entry.body || '');
+  const messages = [
+    { role: 'system', content: prompt.text || '' },
+    { role: 'user', content: context }
+  ];
+
+  try {
+    const res = await fetch('https://bloknot.abdisaminuuluaibek2051.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages,
+        system: prompt.text || ''
+      })
+    });
+    const data = await res.json();
+    const reply = data.reply || 'Нет ответа';
+    entryAiChat = messages.concat([{ role: 'assistant', content: reply }]);
+    respEl.textContent = reply;
+  } catch(e) {
+    respEl.textContent = '⚠️ Ошибка соединения с ИИ.';
+  }
+};
 
 let aiHistory = [];
 let activeAiPrompt = 'default';
