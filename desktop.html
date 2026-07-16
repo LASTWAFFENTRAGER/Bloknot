@@ -279,6 +279,11 @@ html, body {
 ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
 
+/* LINE MANAGEMENT */
+#mgr-line-btn { display: none; padding: 3px 8px; font-size: 9px; font-family: var(--mono); cursor: pointer; background: var(--bg3); border: 1px solid var(--border2); border-radius: 3px; color: var(--muted); transition: all 0.12s; }
+#mgr-line-btn:hover { border-color: var(--gold); color: var(--text); }
+#mgr-line-btn.visible { display: inline-block; }
+
 /* CALL PANEL */
 #call-panel { display: none; position: fixed; bottom: 0; left: 200px; right: 0; z-index: 9002; background: var(--bg2); border-top: 1px solid var(--gold); max-height: 280px; flex-direction: column; animation: callUp 0.25s ease; }
 @keyframes callUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -1401,56 +1406,100 @@ window.addMemberToLine = async function(lineId){
 
 // ── БЛОК ИНФЫ О СОВМЕСТНОЙ ЛИНИИ ──
 function renderSharedInfoBar() {
-  const bar = document.getElementById('shared-info-bar');
-  if (!bar) return;
-  if (!isSharedLine || !activeLineId) { bar.style.display = 'none'; renderSharedInviteRow(); return; }
-  const line = activeLine();
-  if (!line) { bar.style.display = 'none'; return; }
-  bar.style.display = 'block';
-  const members = line.members || {};
-  const ownerHandle = (line.memberHandles && line.memberHandles[line.ownerId]) || line.ownerId || '?';
-  const memberHandles = Object.entries(members).map(([mid, info]) => {
-    const h = info.handle || (line.memberHandles && line.memberHandles[mid]) || mid;
-    const isOwner = mid === line.ownerId;
-    const removeBtn = (line.ownerId === uid() && mid !== uid())
-      ? ` <span onclick="quickRemoveFromLine('${mid}')" style="color:#c44;cursor:pointer;font-size:9px;margin-left:2px">✕</span>`
-      : '';
-    return `@${esc(h)}${isOwner ? ' (создатель)' : ''}${removeBtn}`;
-  }).join(', ');
-  const entryCount = (sharedEntries[activeLineId] || []).length;
-  bar.innerHTML = `Создатель: @${esc(ownerHandle)} &nbsp;|&nbsp; Участники: ${memberHandles || '—'} &nbsp;|&nbsp; Записей: ${entryCount}`;
-  renderSharedInviteRow();
+  const btn = document.getElementById('mgr-line-btn');
+  const infoBar = document.getElementById('shared-info-bar');
+  const inviteRow = document.getElementById('shared-invite-row');
+  // Скрываем старые элементы всегда
+  if (infoBar) infoBar.style.display = 'none';
+  if (inviteRow) inviteRow.style.display = 'none';
+  if (!btn) return;
+  if (!isSharedLine || !activeLineId) { btn.classList.remove('visible'); return; }
+  btn.classList.add('visible');
 }
 
 function renderSharedInviteRow() {
-  const row = document.getElementById('shared-invite-row');
-  if (!row) return;
-  if (!isSharedLine || !activeLineId) { row.style.display = 'none'; return; }
-  row.style.display = 'block';
-  row.innerHTML = `<button class="btn-o" style="font-size:9px;padding:2px 8px" onclick="showSharedInviteSearch()">+ Пригласить</button>`;
+  // Больше не показываем отдельную кнопку — всё в модалке управления
 }
 
-window.showSharedInviteSearch = function() {
-  const row = document.getElementById('shared-invite-row');
-  if (!row) return;
-  row.innerHTML = `
-    <div style="display:flex;gap:4px;align-items:center">
-      <input id="shared-invite-input" type="text" placeholder="@никнейм или #ID"
-        style="background:var(--bg3);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-size:10px;padding:3px 6px;width:160px;outline:none"
-        onkeydown="if(event.key==='Enter')inviteToSharedLine()">
-      <button class="btn-p" style="font-size:9px;padding:2px 8px" onclick="inviteToSharedLine()">Пригласить</button>
-      <span id="shared-invite-msg" style="font-size:9px;color:var(--muted);margin-left:4px"></span>
+window.openLineManagementModal = function() {
+  if (!isSharedLine || !activeLineId) return;
+  const line = activeLine();
+  if (!line) return;
+  const members = line.members || {};
+  const entryCount = (sharedEntries[activeLineId] || []).length;
+  const createdAtStr = line.createdAt ? fmt(line.createdAt) : '—';
+  const ownerUid = line.ownerId || '';
+  const ownerHandle = (line.memberHandles && line.memberHandles[ownerUid]) || ownerUid || '?';
+
+  const memberRows = Object.entries(members).map(([muid, info]) => {
+    const role = info.role || 'reader';
+    const handle = info.handle || muid;
+    return `<div class="member-row">
+      ${avatarSmallHTML(handle)}
+      <span class="mem-name">${esc(handle)}</span>
+      <span class="mem-role role-badge role-${role}">${role==='admin'?'админ':role==='partner'?'партнёр':'читатель'}</span>
+      ${line.ownerId===uid()&&muid!==uid()?`
+        <select onchange="window._mgrChangeRole('${muid}',this.value)" style="margin-left:4px">
+          <option value="admin" ${role==='admin'?'selected':''}>админ</option>
+          <option value="partner" ${role==='partner'?'selected':''}>партнёр</option>
+          <option value="reader" ${role==='reader'?'selected':''}>читатель</option>
+        </select>
+        <span class="mem-remove" onclick="window._mgrRemoveMember('${muid}')">✕</span>`:''}
+    </div>`;
+  }).join('') || '<div style="color:var(--dim);font-size:11px;padding:8px 0">Нет участников</div>';
+
+  openModal(`
+    <div class="m-title" style="display:flex;align-items:center;gap:8px">
+      <span style="color:${line.color}">${line.icon}</span> ${esc(line.name)}
+      <span style="font-size:11px;color:var(--gold);font-family:var(--mono);margin-left:4px">⇄</span>
     </div>
-  `;
-  setTimeout(() => { const inp = document.getElementById('shared-invite-input'); if (inp) inp.focus(); }, 50);
+    <div class="prof-stat-row" style="margin-bottom:16px">
+      <div class="prof-stat"><span class="ps-num">${Object.keys(members).length}</span><span class="ps-lbl">участников</span></div>
+      <div class="prof-stat"><span class="ps-num">${entryCount}</span><span class="ps-lbl">записей</span></div>
+      <div class="prof-stat"><span class="ps-num">${createdAtStr}</span><span class="ps-lbl">создана</span></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Создатель: @${esc(ownerHandle)}</div>
+
+    <div class="prof-section-title">УЧАСТНИКИ</div>
+    ${memberRows}
+
+    ${line.ownerId===uid()?`
+    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px">
+      <label class="m-lbl">ПРИГЛАСИТЬ УЧАСТНИКА</label>
+      <div style="display:flex;gap:6px">
+        <input class="m-in" id="mgr-invite-input" placeholder="@никнейм или #ID" style="margin-bottom:0;flex:1"
+          onkeydown="if(event.key==='Enter')window._mgrInviteMember()">
+        <button class="btn-p" onclick="window._mgrInviteMember()" style="padding:7px 12px;flex-shrink:0">+</button>
+      </div>
+      <div id="mgr-invite-msg" style="background:#2a1515;border:1px solid #4a2222;border-radius:3px;color:#d47373;font-size:11px;padding:8px 10px;margin-top:8px;display:none;font-family:var(--sans)"></div>
+    </div>`:''}
+
+    <div class="m-act"><button class="btn-g" onclick="closeModal()">Закрыть</button></div>
+  `);
+  // Сохраняем lineId для хелперов
+  window._mgrLineId = activeLineId;
+  setTimeout(() => { const inp = document.getElementById('mgr-invite-input'); if (inp) inp.focus(); }, 50);
 };
 
-window.inviteToSharedLine = async function() {
-  const inp = document.getElementById('shared-invite-input');
-  const msg = document.getElementById('shared-invite-msg');
+window._mgrChangeRole = async function(memberUid, newRole) {
+  const updateObj = {}; updateObj[`members.${memberUid}.role`] = newRole;
+  await updateDoc(doc(db, 'sharedLines', window._mgrLineId), updateObj);
+  // Переоткрыть модалку с новыми данными
+  setTimeout(() => { if (document.getElementById('overlay').classList.contains('open')) window.openLineManagementModal(); }, 250);
+};
+
+window._mgrRemoveMember = async function(memberUid) {
+  if (!confirm('Удалить участника?')) return;
+  await window.removeMember(window._mgrLineId, memberUid);
+  setTimeout(() => { if (document.getElementById('overlay').classList.contains('open')) window.openLineManagementModal(); }, 300);
+};
+
+window._mgrInviteMember = async function() {
+  const inp = document.getElementById('mgr-invite-input');
+  const msg = document.getElementById('mgr-invite-msg');
   const handle = (inp?.value || '').trim().replace(/[@#]/g, '').toLowerCase();
-  if (!handle) return;
-  if (msg) { msg.textContent = 'Поиск...'; msg.style.color = 'var(--muted)'; }
+  msg.style.display = 'none';
+  if (!handle) { msg.textContent = 'Введите никнейм или ID'; msg.style.color = '#d47373'; msg.style.display = 'block'; return; }
 
   let targetUid = null, targetHandle = null;
   if (/^\d+$/.test(handle)) {
@@ -1460,25 +1509,19 @@ window.inviteToSharedLine = async function() {
     const snap = await getDocs(query(collection(db,'users'), where('handle','==', handle)));
     if (!snap.empty) { targetUid = snap.docs[0].id; targetHandle = snap.docs[0].data().handle; }
   }
-  if (!targetUid) { if (msg) { msg.textContent = 'Не найден'; msg.style.color = '#c44'; } return; }
-  if (targetUid === uid()) { if (msg) { msg.textContent = 'Это вы'; msg.style.color = '#c44'; } return; }
+  if (!targetUid) { msg.textContent = 'Пользователь не найден'; msg.style.color = '#d47373'; msg.style.display = 'block'; return; }
+  if (targetUid === uid()) { msg.textContent = 'Это вы'; msg.style.color = '#d47373'; msg.style.display = 'block'; return; }
 
-  const line = activeLine();
+  const line = sharedLines.find(l => l.id === window._mgrLineId);
   if (line && line.members && line.members[targetUid]) {
-    if (msg) { msg.textContent = 'Уже участник'; msg.style.color = 'var(--dim)'; }
-    return;
+    msg.textContent = 'Уже участник'; msg.style.color = 'var(--dim)'; msg.style.display = 'block'; return;
   }
   const updateObj = {}; updateObj[`members.${targetUid}`] = { role: 'reader', handle: targetHandle };
-  await updateDoc(doc(db, 'sharedLines', activeLineId), updateObj);
-  if (msg) { msg.textContent = 'Добавлен!'; msg.style.color = '#4caf50'; }
+  await updateDoc(doc(db, 'sharedLines', window._mgrLineId), updateObj);
+  msg.textContent = 'Участник добавлен!'; msg.style.color = '#4caf50'; msg.style.display = 'block';
+  msg.style.background = '#1a2a15'; msg.style.borderColor = '#2a4a22';
   if (inp) inp.value = '';
-  setTimeout(() => { renderSharedInfoBar(); }, 600);
-};
-
-window.quickRemoveFromLine = async function(memberUid) {
-  if (!confirm('Удалить участника из линии?')) return;
-  await window.removeMember(activeLineId, memberUid);
-  setTimeout(() => renderSharedInfoBar(), 400);
+  setTimeout(() => { if (document.getElementById('overlay').classList.contains('open')) window.openLineManagementModal(); }, 600);
 };
 
 window.openProfile = async function(){
@@ -1536,6 +1579,15 @@ async function renderProfilePanel(){
           <button class="btn-p" onclick="deskSaveHandle()" style="padding:7px 12px;flex-shrink:0">✓</button>
         </div>
         <div id="d-handle-msg" style="display:none;font-size:10px;margin-top:4px;font-family:var(--sans)"></div>
+      </div>
+
+      <div>
+        <label class="m-lbl">ЛЮБИМАЯ ФРАЗА</label>
+        <div style="display:flex;gap:6px">
+          <input class="m-in" id="d-profile-tagline" value="${esc(myProfile.tagline||'')}"
+            placeholder="Твой девиз..." maxlength="60" style="margin-bottom:0;flex:1">
+          <button class="btn-p" onclick="deskSaveTagline()" style="padding:7px 12px;flex-shrink:0">✓</button>
+        </div>
       </div>
 
     </div>
@@ -1877,15 +1929,15 @@ function startCallDurationTimer() {
 }
 function stopCallDurationTimer() { if (callDurationTimer) { clearInterval(callDurationTimer); callDurationTimer = null; } document.getElementById('call-duration').textContent = '00:00'; }
 
-const listHead=document.getElementById('list-head'); const extraRow=document.createElement('div'); extraRow.style='display:flex;gap:5px;justify-content:space-between;align-items:center;'; extraRow.innerHTML=`<button class="btn-p" style="font-size:10px;padding:5px 12px" onclick="openNewEntry()">+ запись</button><button class="btn-o" style="font-size:10px;padding:4px 10px;${!isSharedLine?'display:none':''}" id="btn-call" onclick="startCall()">📞 Позвонить</button><button class="btn-del" style="font-size:10px" onclick="confirmDelLine()">удалить линию</button>`; listHead.appendChild(extraRow);
-// Shared line info bar (below extraRow)
+const listHead=document.getElementById('list-head'); const extraRow=document.createElement('div'); extraRow.style='display:flex;gap:5px;justify-content:space-between;align-items:center;'; extraRow.innerHTML=`<button class="btn-p" style="font-size:10px;padding:5px 12px" onclick="openNewEntry()">+ запись</button><button id="mgr-line-btn" class="btn-o" style="font-size:10px;padding:4px 10px" onclick="openLineManagementModal()">⚙ Управление</button><button class="btn-o" style="font-size:10px;padding:4px 10px;${!isSharedLine?'display:none':''}" id="btn-call" onclick="startCall()">📞 Позвонить</button><button class="btn-del" style="font-size:10px" onclick="confirmDelLine()">удалить линию</button>`; listHead.appendChild(extraRow);
+// Shared line info bar and invite row (hidden, kept as empty placeholders)
 const sharedInfoBar = document.createElement('div');
 sharedInfoBar.id = 'shared-info-bar';
-sharedInfoBar.style.cssText = 'display:none;padding:6px 14px;border-bottom:1px solid var(--border);font-size:10px;color:var(--muted);font-family:var(--sans);line-height:1.7';
+sharedInfoBar.style.cssText = 'display:none';
 listHead.appendChild(sharedInfoBar);
 const sharedInviteRow = document.createElement('div');
 sharedInviteRow.id = 'shared-invite-row';
-sharedInviteRow.style.cssText = 'display:none;padding:4px 14px;border-bottom:1px solid var(--border)';
+sharedInviteRow.style.cssText = 'display:none';
 listHead.appendChild(sharedInviteRow);
 
 // ── ДЕСКТОП РЕЖИМЫ ──
